@@ -10,6 +10,11 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
@@ -25,9 +30,11 @@ public class Robot extends TimedRobot {
   VictorSP driveRight2 = new VictorSP(8);
   VictorSP driveLeft1 = new VictorSP(7);
   VictorSP driveLeft2 = new VictorSP(6);
+  CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
+  RelativeEncoder encoder = neo.getEncoder();
   private final MotorControllerGroup m_leftDrive = new MotorControllerGroup(driveLeft1, driveLeft2);
   private final MotorControllerGroup m_rightDrive = new MotorControllerGroup(driveRight1, driveRight2);
-  private final DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftDrive, m_rightDrive);
+  // private final DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftDrive, m_rightDrive);
   private final Joystick m_controller = new Joystick(0);
   Joystick bbRight = new Joystick(2);
   Joystick bbLeft = new Joystick(3);
@@ -56,22 +63,44 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {
     // Drive for 2 seconds
-    if (m_timer.get() < 2.0) {
+    while (neo.getEncoder().getPosition() < 100) {
       // Drive forwards half speed, make sure to turn input squaring off
-      m_robotDrive.arcadeDrive(-1, 0.0, false);
-    } else {
-      m_robotDrive.stopMotor(); // stop robot
+      // m_robotDrive.arcadeDrive(-1, 0.0, false);
+      neo.set(1);
+      System.out.println(neo.getEncoder().getPosition());
     }
+
+    while (neo.getEncoder().getPosition() > 0) {
+
+      neo.set(-1);
+      System.out.println(neo.getEncoder().getPosition());
+    }
+
+    while (true){
+      neo.set(0);
+      System.out.println(neo.getEncoder().getPosition());
+    }
+
   }
 
   /** This function is called once each time the robot enters teleoperated mode. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+
+    neo.getEncoder().setPosition(0);
+
+  }
 
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(m_controller.getY(), m_controller.getZ());
+    // m_robotDrive.arcadeDrive(m_controller.getY(), m_controller.getZ());
+
+    neo.set(m_controller.getY());
+
+    if (m_controller.getRawButton(1)) neo.getEncoder().setPosition(0);
+
+    System.out.println(neo.getEncoder().getPosition());
   }
 
   /** This function is called once each time the robot enters test mode. */
