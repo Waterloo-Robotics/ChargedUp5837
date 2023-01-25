@@ -13,8 +13,13 @@ import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
+import java.beans.Encoder;
+
+import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.EncoderType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.*;
@@ -33,6 +38,7 @@ public class Robot extends TimedRobot {
   VictorSP driveLeft1 = new VictorSP(7);
   VictorSP driveLeft2 = new VictorSP(6);
   CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
+  SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   RelativeEncoder encoder = neo.getEncoder();
   private final MotorControllerGroup m_leftDrive = new MotorControllerGroup(driveLeft1, driveLeft2);
   private final MotorControllerGroup m_rightDrive = new MotorControllerGroup(driveRight1, driveRight2);
@@ -49,6 +55,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    imu.calibrate();
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
@@ -102,20 +109,21 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
 
     neo.getEncoder().setPosition(0);
-    imu.setYawAxis(ADIS16470_IMU.IMUAxis.kZ);
+    imu.setYawAxis(ADIS16470_IMU.IMUAxis.kY);
 
   }
 
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(m_controller.getY(), m_controller.getZ());
-
+    // m_robotDrive.arcadeDrive(m_controller.getY(), m_controller.getZ());
+    encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
     // neo.set(m_controller.getY());
 
     // if (m_controller.getRawButton(1)) neo.getEncoder().setPosition(0);
 
-    System.out.println("Z Axis: " + imu.getAngle());
+    System.out.println("Encoder: " + encoder2.getPosition());
+    
   }
 
   /** This function is called once each time the robot enters test mode. */
