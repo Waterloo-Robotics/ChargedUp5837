@@ -215,6 +215,11 @@ public class Robot extends TimedRobot {
         joint1PID.setSetpoint(joint1Angle);
         break;
 
+      case home:
+        setArmCoordinates(0, 0);
+        joint1PID.setSetpoint(joint1Angle);
+        break;
+
     }
 
     m_Joint1.set(joint1PID.calculate((joint1Enc.get() * 2 * Math.PI)));
