@@ -212,12 +212,12 @@ public class Robot extends TimedRobot {
 
       case ballPickup:
         setArmCoordinates(30, 5);
-        joint1PID.setSetpoint(joint1Angle);
+        // joint1PID.setSetpoint(joint1Angle);
         break;
 
     }
 
-    m_Joint1.set(joint1PID.calculate((joint1Enc.get() * 2 * Math.PI)));
+    // m_Joint1.set(joint1PID.calculate((joint1Enc.get() * 2 * Math.PI)));
 
   }
 
