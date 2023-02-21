@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 // import edu.wpi.first.wpilibj.interfaces.Gyro;
@@ -27,6 +28,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 // import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
+import edu.wpi.first.math.controller.PIDController;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -35,25 +37,44 @@ import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
  * directory.
  */
 public class Robot extends TimedRobot {
+
+  /* Drive Base Motor Controllers */
   WPI_TalonSRX driveRight1 = new WPI_TalonSRX(6);
   WPI_TalonSRX driveRight2 = new WPI_TalonSRX(7);
+  private final MotorControllerGroup m_rightDrive = new MotorControllerGroup(driveRight1, driveRight2);
+
   WPI_TalonSRX driveLeft1 = new WPI_TalonSRX(8);
   WPI_TalonSRX driveLeft2 = new WPI_TalonSRX(9);
-  CANSparkMax base1 = new CANSparkMax(10, MotorType.kBrushless);
-  CANSparkMax base2 = new CANSparkMax(11, MotorType.kBrushless);
-  CANSparkMax secondary = new CANSparkMax(12, MotorType.kBrushless);
-  MotorControllerGroup base = new MotorControllerGroup(base1, base2);
+  private final MotorControllerGroup m_leftDrive = new MotorControllerGroup(driveLeft1, driveLeft2);
+
+  /* Arm Motor Controllers */
+  CANSparkMax m_Joint1_1 = new CANSparkMax(10, MotorType.kBrushless);
+  CANSparkMax m_Joint1_2 = new CANSparkMax(11, MotorType.kBrushless);
+  CANSparkMax m_Joint2 = new CANSparkMax(12, MotorType.kBrushless);
+  MotorControllerGroup m_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
+
+  PIDController 
   // CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   // RelativeEncoder encoder = neo.getEncoder();
   
-  private final MotorControllerGroup m_leftDrive = new MotorControllerGroup(driveLeft1, driveLeft2);
-  private final MotorControllerGroup m_rightDrive = new MotorControllerGroup(driveRight1, driveRight2);
+  
   private final DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftDrive, m_rightDrive);
   private final XboxController m_controller = new XboxController(1);
   Joystick bbRight = new Joystick(0);
   Joystick bbLeft = new Joystick(3);
   private final Timer m_timer = new Timer();
+  public enum ArmState {
+
+    ballPickup, cubePickup,
+    ballScoreGround, cubeScoreGround,
+    ballScoreLow, cubeScoreLow,
+    ballScoreHigh, cubeScoreHigh,
+    home, homeSequence
+
+  }
+
+  public ArmState armState = ArmState.home;
   // ADIS16470_IMU imu = new ADIS16470_IMU();
   
   /**
@@ -123,7 +144,44 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
+    // Uncomment for driving
     m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
+
+
+
+    // nick arm stuff
+    // double y1Math, y2Math;
+
+    // double y1Axis = m_controller.getLeftY();
+    // double y2Axis = m_controller.getRightY();
+
+
+    // if (Math.abs(y1Axis) < 0.25){
+    //   y1Math = 0.0;
+    // }
+    // else {
+    //     y1Math = Math.signum(y1Axis)*(Math.abs(y1Axis) - .25)*1.333;
+    // }
+
+    // if (Math.abs(y2Axis) < 0.25){
+    //   y2Math = 0.0;
+    // }
+    // else {
+    //   y2Math = Math.signum(y2Axis)*(Math.abs(y2Axis) - .25)*1.333;
+    // }
+
+    // y1Math = y1Math * 0.25;
+    // y2Math = y2Math * 0.25;
+
+    //Arm Testing
+    // m_Joint1.set(y2Math);
+    // m_Joint2.set(y1Math);
+
+    // SmartDashboard.putNumber("Arm I", y2Math);
+    // SmartDashboard.putNumber("Arm D", y1Math);
+
+
+
     // encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
     // neo.set(m_controller.getY());
 
@@ -158,15 +216,15 @@ public class Robot extends TimedRobot {
 
     if (x < 0) {
 
-      base.setInverted(true);
-      secondary.setInverted(true);
+      m_Joint1.setInverted(true);
+      m_Joint2.setInverted(true);
       
       x = Math.abs(x);
 
     } else {
 
-      base.setInverted(false);
-      secondary.setInverted(false);
+      m_Joint1.setInverted(false);
+      m_Joint2.setInverted(false);
 
     }
 
