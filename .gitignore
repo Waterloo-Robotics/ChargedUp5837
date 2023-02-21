@@ -124,6 +124,8 @@ ehthumbs_vista.db
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
+
+# IntelliJ config folder, not necessary
 .idea
 
 # Windows Installer files
