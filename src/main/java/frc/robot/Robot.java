@@ -49,11 +49,17 @@ public class Robot extends TimedRobot {
   MotorControllerGroup m_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
   Encoder joint1Enc = new Encoder(0, 1);
+  Encoder joint2Enc = new Encoder(2, 3);
 
   double joint1kP = 0;
   double joint1kI = 0;
   double joint1kD = 0;
   PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
+
+  double joint2kP = 0;
+  double joint2kI = 0;
+  double joint2kD = 0;
+  PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
   // CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   // RelativeEncoder encoder = neo.getEncoder();
@@ -66,10 +72,10 @@ public class Robot extends TimedRobot {
   private final Timer m_timer = new Timer();
   public enum ArmState {
 
-    ballPickup, cubePickup,
-    ballScoreGround, cubeScoreGround,
-    ballScoreLow, cubeScoreLow,
-    ballScoreHigh, cubeScoreHigh,
+    conePickup, cubePickup,
+    coneScoreGround, cubeScoreGround,
+    coneScoreLow, cubeScoreLow,
+    coneScoreHigh, cubeScoreHigh,
     home, homeSequence
 
   }
@@ -147,7 +153,8 @@ public class Robot extends TimedRobot {
     // Uncomment for driving
 //    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
-    if (m_controller.getAButton()) armState = ArmState.ballPickup;
+    if (m_controller.getAButton()) armState = ArmState.conePickup;
+    if (m_controller.getBButton()) armState = ArmState.coneScoreLow;
 
     this.updateArm();
 
@@ -206,23 +213,46 @@ public class Robot extends TimedRobot {
 
   }
 
+  double x, y = 0;
+  double joint1Pos, joint2Pos = 0;
+  double joint1Speed, joint2Speed = 0;
   public void updateArm() {
 
     switch (armState) {
 
-      case ballPickup:
-        setArmCoordinates(30, 5);
-        // joint1PID.setSetpoint(joint1Angle);
+      case conePickup:
+        x = 30;
+        y = 5;
+        break;
+
+      case coneScoreLow:
+        x = 28;
+        y = 38;
         break;
 
       case home:
-        setArmCoordinates(0, 0);
-        joint1PID.setSetpoint(joint1Angle);
+        x = 0;
+        y = 0;
         break;
 
     }
+    setArmCoordinates(x, y);
+//    joint1PID.setSetpoint(joint1Angle);
+//    joint2PID.setSetpoint(joint2Angle);
 
-    // m_Joint1.set(joint1PID.calculate((joint1Enc.get() * 2 * Math.PI)));
+    SmartDashboard.putNumber("x", x);
+    SmartDashboard.putNumber("y", y);
+    SmartDashboard.putNumber("joint1Angle", joint1Angle);
+    SmartDashboard.putNumber("joint2Angle", joint2Angle);
+
+//    joint1Pos = joint1Enc.get() * 2 * Math.PI;
+//    joint2Pos = joint2Enc.get() * 2 * Math.PI;
+
+//    joint1Speed = joint1PID.calculate(joint1Pos);
+//    joint2Speed = joint2PID.calculate(joint2Pos);
+
+//     m_Joint1.set(joint1Speed);
+//     m_Joint2.set(joint2Speed);
 
   }
 
