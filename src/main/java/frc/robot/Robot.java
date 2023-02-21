@@ -4,16 +4,12 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.*;
 // import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 // import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 
-import com.ctre.phoenix.motorcontrol.GroupMotorControllers;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.revrobotics.CANSparkMax;
 
@@ -26,8 +22,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 // import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.math.controller.PIDController;
 
 /**
@@ -53,7 +47,12 @@ public class Robot extends TimedRobot {
   CANSparkMax m_Joint2 = new CANSparkMax(12, MotorType.kBrushless);
   MotorControllerGroup m_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
-  PIDController 
+  Encoder joint1Enc = new Encoder(0, 1);
+
+  double joint1kP;
+  double joint1kI;
+  double joint1kD;
+  PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
   // CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   // RelativeEncoder encoder = neo.getEncoder();
@@ -147,6 +146,7 @@ public class Robot extends TimedRobot {
     // Uncomment for driving
     m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
+    m_Joint1.set(joint1PID.calculate(joint1Enc.getDistance(), joint1Angle));
 
 
     // nick arm stuff
