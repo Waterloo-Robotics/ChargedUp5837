@@ -23,6 +23,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 // import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -49,9 +50,9 @@ public class Robot extends TimedRobot {
 
   Encoder joint1Enc = new Encoder(0, 1);
 
-  double joint1kP;
-  double joint1kI;
-  double joint1kD;
+  double joint1kP = 0;
+  double joint1kI = 0;
+  double joint1kD = 0;
   PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
   // CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
@@ -144,41 +145,43 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     // Uncomment for driving
-    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
+//    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
-    m_Joint1.set(joint1PID.calculate(joint1Enc.getDistance(), joint1Angle));
+    if (m_controller.getAButton()) armState = ArmState.ballPickup;
+
+    this.updateArm();
 
 
     // nick arm stuff
-    // double y1Math, y2Math;
+     /*double y1Math, y2Math;
 
-    // double y1Axis = m_controller.getLeftY();
-    // double y2Axis = m_controller.getRightY();
+     double y1Axis = m_controller.getLeftY();
+     double y2Axis = m_controller.getRightY();
 
 
-    // if (Math.abs(y1Axis) < 0.25){
-    //   y1Math = 0.0;
-    // }
-    // else {
-    //     y1Math = Math.signum(y1Axis)*(Math.abs(y1Axis) - .25)*1.333;
-    // }
+     if (Math.abs(y1Axis) < 0.25){
+       y1Math = 0.0;
+     }
+     else {
+         y1Math = Math.signum(y1Axis)*(Math.abs(y1Axis) - .25)*1.333;
+     }
 
-    // if (Math.abs(y2Axis) < 0.25){
-    //   y2Math = 0.0;
-    // }
-    // else {
-    //   y2Math = Math.signum(y2Axis)*(Math.abs(y2Axis) - .25)*1.333;
-    // }
+     if (Math.abs(y2Axis) < 0.25){
+       y2Math = 0.0;
+     }
+     else {
+       y2Math = Math.signum(y2Axis)*(Math.abs(y2Axis) - .25)*1.333;
+     }
 
-    // y1Math = y1Math * 0.25;
-    // y2Math = y2Math * 0.25;
+     y1Math = y1Math * 0.25;
+     y2Math = y2Math * 0.25;
 
-    //Arm Testing
-    // m_Joint1.set(y2Math);
-    // m_Joint2.set(y1Math);
+    Arm Testing
+     m_Joint1.set(y2Math);
+     m_Joint2.set(y1Math);
 
-    // SmartDashboard.putNumber("Arm I", y2Math);
-    // SmartDashboard.putNumber("Arm D", y1Math);
+     SmartDashboard.putNumber("Arm I", y2Math);
+     SmartDashboard.putNumber("Arm D", y1Math);*/
 
 
 
@@ -200,6 +203,21 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
 
     if (bbRight.getRawButton(1)) setArmCoordinates(36, 15);
+
+  }
+
+  public void updateArm() {
+
+    switch (armState) {
+
+      case ballPickup:
+        setArmCoordinates(30, 5);
+        joint1PID.setSetpoint(joint1Angle);
+        break;
+
+    }
+
+    m_Joint1.set(joint1PID.calculate((joint1Enc.get() * 2 * Math.PI)));
 
   }
 
