@@ -1,12 +1,33 @@
 <xml version="1.0">
 <dashboard>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="279" y="180"/>
+		<property name="Text" value="Joint 2 Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="92" y="184"/>
+		<property name="Text" value="Joint 1 Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="569" y="9"/>
+		<width>170</width>
+		<height>16</height>
+		<property name="Text" value="ROBOT CONNECTION STATUS"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
+		<location x="0" y="0"/>
+		<width>1356</width>
+		<property name="Graphics" value="Rounded"/>
+	</static-widget>
 	<widget field="joint2Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="413" y="106"/>
+		<location x="195" y="33"/>
+		<width>226</width>
 		<property name="Upper Limit" value="120.0"/>
 		<property name="Lower Limit" value="-120.0"/>
 	</widget>
 	<widget field="joint1Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="100" y="102"/>
+		<location x="6" y="34"/>
+		<width>232</width>
 		<property name="Upper Limit" value="60.0"/>
 		<property name="Lower Limit" value="-60.0"/>
 	</widget>

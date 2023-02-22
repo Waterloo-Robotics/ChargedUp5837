@@ -51,8 +51,8 @@ public class Robot extends TimedRobot {
   DigitalInput joint1PosLimit = new DigitalInput(0);
   DigitalInput joint1NegLimit = new DigitalInput(1);
 
-  Encoder joint1Enc = new Encoder(0, 1);
-  Encoder joint2Enc = new Encoder(2, 3);
+  // Encoder joint1Enc = new Encoder(0, 1);
+  // Encoder joint2Enc = new Encoder(2, 3);
 
   double joint1kP = 0;
   double joint1kI = 0;
@@ -97,6 +97,7 @@ public class Robot extends TimedRobot {
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
     m_leftDrive.setInverted(true);
+    m_Joint1.setInverted(true);
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -163,28 +164,39 @@ public class Robot extends TimedRobot {
 
 
     // nick arm stuff
-     double y1Math, y2Math;
+    //  double y1Math, y2Math;
 
-     double y1Axis = m_controller.getLeftY();
-     double y2Axis = m_controller.getRightY();
+    //  double y1Axis = m_controller.getLeftY();
+    //  double y2Axis = m_controller.getRightY();
 
 
-     if (Math.abs(y1Axis) < 0.25){
-       y1Math = 0.0;
-     }
-     else {
-         y1Math = Math.signum(y1Axis)*(Math.abs(y1Axis) - .25)*1.333;
-     }
+    //  if (Math.abs(y1Axis) < 0.25){
+    //    y1Math = 0.0;
+    //  }
+    //  else {
+    //      y1Math = Math.signum(y1Axis)*(Math.abs(y1Axis) - .25)*1.333;
+    //  }
 
-     if (Math.abs(y2Axis) < 0.25){
-       y2Math = 0.0;
-     }
-     else {
-       y2Math = Math.signum(y2Axis)*(Math.abs(y2Axis) - .25)*1.333;
-     }
+    //  if (Math.abs(y2Axis) < 0.25){
+    //    y2Math = 0.0;
+    //  }
+    //  else {
+    //    y2Math = Math.signum(y2Axis)*(Math.abs(y2Axis) - .25)*1.333;
+    //  }
 
-     y1Math = y1Math * 0.25;
-     y2Math = y2Math * 0.25;
+    //  y1Math = y1Math * 0.25;
+    //  y2Math = y2Math * 0.25;
+    if (m_controller.getLeftX() > -0.1 && m_controller.getLeftX() < 0.1) {
+
+      leftXMath = 0;
+
+    } else leftXMath = m_controller.getLeftX() * 0.1;
+
+    setJoint1(leftXMath);
+
+    if (m_controller.getAButtonPressed()) m_Joint1_1.getEncoder().setPosition(0);
+
+    System.out.println("Joint 1 NEO enc: " + m_Joint1_1.getEncoder().getPosition());
 
     // Arm Testing
 //     m_Joint1.set(y2Math);
@@ -210,10 +222,28 @@ public class Robot extends TimedRobot {
   public void testInit() {}
 
   /** This function is called periodically during test mode. */
+  double leftXMath = 0;
   @Override
   public void testPeriodic() {
 
-    if (bbRight.getRawButton(1)) setArmCoordinates(36, 15);
+    // if (bbRight.getRawButton(1)) setArmCoordinates(36, 15);
+    
+
+  }
+
+  public void setJoint1(double power) {
+
+    if ((power > 0 && !joint1PosLimit.get()) || (power < 0 && !joint1NegLimit.get())) {
+
+      joint1Speed = 0;
+
+    } else {
+
+      joint1Speed = power;
+
+    }
+
+    m_Joint1.set(joint1Speed);
 
   }
 
@@ -251,13 +281,13 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
     SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
 
-//    joint1Pos = joint1Enc.get() * 2 * Math.PI;
+  //  joint1Pos = joint1Enc.get() * 2 * Math.PI;
 //    joint2Pos = joint2Enc.get() * 2 * Math.PI;
 
-//    joint1Speed = joint1PID.calculate(joint1Pos);
+   joint1Speed = joint1PID.calculate(joint1Pos);
 //    joint2Speed = joint2PID.calculate(joint2Pos);
 
-//     m_Joint1.set(joint1Speed);
+    setJoint1(joint1Speed);
 //     m_Joint2.set(joint2Speed);
 
   }
