@@ -48,6 +48,9 @@ public class Robot extends TimedRobot {
   CANSparkMax m_Joint2 = new CANSparkMax(12, MotorType.kBrushless);
   MotorControllerGroup m_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
+  DigitalInput joint1PosLimit = new DigitalInput(0);
+  DigitalInput joint1NegLimit = new DigitalInput(1);
+
   Encoder joint1Enc = new Encoder(0, 1);
   Encoder joint2Enc = new Encoder(2, 3);
 
@@ -153,14 +156,14 @@ public class Robot extends TimedRobot {
     // Uncomment for driving
 //    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
-    if (m_controller.getAButton()) armState = ArmState.conePickup;
-    if (m_controller.getBButton()) armState = ArmState.coneScoreLow;
+//    if (m_controller.getAButton()) armState = ArmState.conePickup;
+//    if (m_controller.getBButton()) armState = ArmState.coneScoreLow;
 
-    this.updateArm();
+//    this.updateArm();
 
 
     // nick arm stuff
-     /*double y1Math, y2Math;
+     double y1Math, y2Math;
 
      double y1Axis = m_controller.getLeftY();
      double y2Axis = m_controller.getRightY();
@@ -183,12 +186,12 @@ public class Robot extends TimedRobot {
      y1Math = y1Math * 0.25;
      y2Math = y2Math * 0.25;
 
-    Arm Testing
-     m_Joint1.set(y2Math);
-     m_Joint2.set(y1Math);
+    // Arm Testing
+//     m_Joint1.set(y2Math);
+//     m_Joint2.set(y1Math);
 
-     SmartDashboard.putNumber("Arm I", y2Math);
-     SmartDashboard.putNumber("Arm D", y1Math);*/
+//     SmartDashboard.putNumber("Arm I", y2Math);
+//     SmartDashboard.putNumber("Arm D", y1Math);
 
 
 
@@ -197,7 +200,8 @@ public class Robot extends TimedRobot {
 
     // if (m_controller.getRawButton(1)) neo.getEncoder().setPosition(0);
 
-    // System.out.println("Encoder: " + encoder2.getPosition());
+    System.out.println("Joint 1 Positive Limit: " + joint1PosLimit.get());
+    System.out.println("Joint 1 Negative Limit: " + joint1NegLimit.get());
     
   }
 
