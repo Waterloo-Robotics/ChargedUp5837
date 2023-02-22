@@ -155,6 +155,7 @@ public class Robot extends TimedRobot {
 
     if (m_controller.getAButton()) armState = ArmState.conePickup;
     if (m_controller.getBButton()) armState = ArmState.coneScoreLow;
+    if (m_controller.getStartButton()) armState = ArmState.home;
 
     this.updateArm();
 
@@ -233,17 +234,19 @@ public class Robot extends TimedRobot {
       case home:
         x = 0;
         y = 0;
+        joint1Angle = 0;
+        joint2Angle = 0;
         break;
 
     }
-    setArmCoordinates(x, y);
+    if (armState != ArmState.home) setArmCoordinates(x, y);
 //    joint1PID.setSetpoint(joint1Angle);
 //    joint2PID.setSetpoint(joint2Angle);
 
     SmartDashboard.putNumber("x", x);
     SmartDashboard.putNumber("y", y);
-    SmartDashboard.putNumber("joint1Angle", joint1Angle);
-    SmartDashboard.putNumber("joint2Angle", joint2Angle);
+    SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
+    SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
 
 //    joint1Pos = joint1Enc.get() * 2 * Math.PI;
 //    joint2Pos = joint2Enc.get() * 2 * Math.PI;

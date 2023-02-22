@@ -1,0 +1,18 @@
+<xml version="1.0">
+<dashboard>
+	<widget field="joint2Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="413" y="106"/>
+		<property name="Upper Limit" value="120.0"/>
+		<property name="Lower Limit" value="-120.0"/>
+	</widget>
+	<widget field="joint1Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="100" y="102"/>
+		<property name="Upper Limit" value="60.0"/>
+		<property name="Lower Limit" value="-60.0"/>
+	</widget>
+</dashboard>
+<live-window>
+</live-window>
+	<hidden field="x"/>
+	<hidden field="y"/>
+</xml>
