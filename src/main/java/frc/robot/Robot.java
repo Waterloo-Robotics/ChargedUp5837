@@ -34,56 +34,28 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends TimedRobot {
 
   /* Drive Base Motor Controllers */
-  WPI_TalonSRX driveRight1 = new WPI_TalonSRX(6);
-  WPI_TalonSRX driveRight2 = new WPI_TalonSRX(7);
-  private final MotorControllerGroup m_rightDrive = new MotorControllerGroup(driveRight1, driveRight2);
+  WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
+  WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
+  private final MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
 
-  WPI_TalonSRX driveLeft1 = new WPI_TalonSRX(8);
-  WPI_TalonSRX driveLeft2 = new WPI_TalonSRX(9);
-  private final MotorControllerGroup m_leftDrive = new MotorControllerGroup(driveLeft1, driveLeft2);
-
-  /* Arm Motor Controllers */
-  CANSparkMax m_Joint1_1 = new CANSparkMax(10, MotorType.kBrushless);
-  CANSparkMax m_Joint1_2 = new CANSparkMax(11, MotorType.kBrushless);
-  CANSparkMax m_Joint2 = new CANSparkMax(12, MotorType.kBrushless);
-  MotorControllerGroup m_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
-
-  DigitalInput joint1PosLimit = new DigitalInput(0);
-  DigitalInput joint1NegLimit = new DigitalInput(1);
+  WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
+  WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
+  private final MotorControllerGroup mg_leftDrive = new MotorControllerGroup(m_driveLeft1, m_driveLeft2);
 
   // Encoder joint1Enc = new Encoder(0, 1);
   // Encoder joint2Enc = new Encoder(2, 3);
-
-  double joint1kP = 0;
-  double joint1kI = 0;
-  double joint1kD = 0;
-  PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
-
-  double joint2kP = 0;
-  double joint2kI = 0;
-  double joint2kD = 0;
-  PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
   // CANSparkMax neo = new CANSparkMax(4, MotorType.kBrushless);
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   // RelativeEncoder encoder = neo.getEncoder();
   
   
-  private final DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftDrive, m_rightDrive);
-  private final XboxController m_controller = new XboxController(1);
+  private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
+  private final XboxController c_controller = new XboxController(1);
   Joystick bbRight = new Joystick(0);
   Joystick bbLeft = new Joystick(3);
-  private final Timer m_timer = new Timer();
-  public enum ArmState {
+  private final Timer timer = new Timer();
 
-    conePickup, cubePickup,
-    coneScoreGround, cubeScoreGround,
-    coneScoreLow, cubeScoreLow,
-    coneScoreHigh, cubeScoreHigh,
-    home, homeSequence
-
-  }
-
-  public ArmState armState = ArmState.home;
+  public Arm.ArmState armState = Arm.ArmState.home;
   // ADIS16470_IMU imu = new ADIS16470_IMU();
   
   /**
@@ -96,15 +68,15 @@ public class Robot extends TimedRobot {
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
-    m_leftDrive.setInverted(true);
-    m_Joint1.setInverted(true);
+    mg_leftDrive.setInverted(true);
+    mg_Joint1.setInverted(true);
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
   @Override
   public void autonomousInit() {
-    m_timer.reset();
-    m_timer.start();
+    timer.reset();
+    timer.start();
   }
 
   /** This function is called periodically during autonomous. */
@@ -154,6 +126,28 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
+
+    /** CONTROLS:
+     * Driver 1 Closes and opens claw, Driver one controls what side of the claw is used for pickup
+     * Driver 1 (and 2?) controls joint 3
+     *
+     * Driver 2 controls arm automatic positioning and manual adjustments (all through inverse kinematics)
+     * Driver 2 controls initial joint 3 position
+     * */
+
+    // get drive joysticks
+
+    // Dead Zone calculations
+
+    // Update Drivebase
+
+    // Claw Control
+      // rotate claw
+      // Actuate pistons
+
+    // Arm Position controls
+      // TODO if robot drive fast for extended period of time (a few seconds?) set arm to position within bumpers
+
     // Uncomment for driving
 //    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
@@ -186,17 +180,17 @@ public class Robot extends TimedRobot {
 
     //  y1Math = y1Math * 0.25;
     //  y2Math = y2Math * 0.25;
-    if (m_controller.getLeftX() > -0.1 && m_controller.getLeftX() < 0.1) {
+    if (c_controller.getLeftX() > -0.1 && c_controller.getLeftX() < 0.1) {
 
       leftXMath = 0;
 
-    } else leftXMath = m_controller.getLeftX() * 0.1;
+    } else leftXMath = c_controller.getLeftX() * 0.1;
 
-    setJoint1(leftXMath);
+//    setJoint1(leftXMath);
 
-    if (m_controller.getAButtonPressed()) m_Joint1_1.getEncoder().setPosition(0);
+//    if (c_controller.getAButtonPressed()) m_Joint1_1.getEncoder().setPosition(0);
 
-    System.out.println("Joint 1 NEO enc: " + m_Joint1_1.getEncoder().getPosition());
+//    System.out.println("Joint 1 NEO enc: " + m_Joint1_1.getEncoder().getPosition());
 
     // Arm Testing
 //     m_Joint1.set(y2Math);
@@ -212,8 +206,8 @@ public class Robot extends TimedRobot {
 
     // if (m_controller.getRawButton(1)) neo.getEncoder().setPosition(0);
 
-    System.out.println("Joint 1 Positive Limit: " + joint1PosLimit.get());
-    System.out.println("Joint 1 Negative Limit: " + joint1NegLimit.get());
+//    System.out.println("Joint 1 Positive Limit: " + ls_joint1PosLimit.get());
+//    System.out.println("Joint 1 Negative Limit: " + ls_joint1NegLimit.get());
     
   }
 
@@ -228,147 +222,6 @@ public class Robot extends TimedRobot {
 
     // if (bbRight.getRawButton(1)) setArmCoordinates(36, 15);
     
-
-  }
-
-  public void setJoint1(double power) {
-
-    if ((power > 0 && !joint1PosLimit.get()) || (power < 0 && !joint1NegLimit.get())) {
-
-      joint1Speed = 0;
-
-    } else {
-
-      joint1Speed = power;
-
-    }
-
-    m_Joint1.set(joint1Speed);
-
-  }
-
-  double x, y = 0;
-  double joint1Pos, joint2Pos = 0;
-  double joint1Speed, joint2Speed = 0;
-  public void updateArm() {
-
-    switch (armState) {
-
-      case conePickup:
-        x = 30;
-        y = 5;
-        break;
-
-      case coneScoreLow:
-        x = 28;
-        y = 38;
-        break;
-
-      case home:
-        x = 0;
-        y = 0;
-        joint1Angle = 0;
-        joint2Angle = 0;
-        break;
-
-    }
-    if (armState != ArmState.home) setArmCoordinates(x, y);
-//    joint1PID.setSetpoint(joint1Angle);
-//    joint2PID.setSetpoint(joint2Angle);
-
-    SmartDashboard.putNumber("x", x);
-    SmartDashboard.putNumber("y", y);
-    SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
-    SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
-
-  //  joint1Pos = joint1Enc.get() * 2 * Math.PI;
-//    joint2Pos = joint2Enc.get() * 2 * Math.PI;
-
-   joint1Speed = joint1PID.calculate(joint1Pos);
-//    joint2Speed = joint2PID.calculate(joint2Pos);
-
-    setJoint1(joint1Speed);
-//     m_Joint2.set(joint2Speed);
-
-  }
-
-  double joint1Angle, joint2Angle = 0;
-  double c = 0;
-  double angleY, angleA = 0;
-
-  double a = 33;
-  double b = 42;
-
-  double joint2Calc;
-
-  public void setArmCoordinates(double x, double y) {
-
-    if (x < 0) {
-
-      m_Joint1.setInverted(true);
-      m_Joint2.setInverted(true);
-      
-      x = Math.abs(x);
-
-    } else {
-
-      m_Joint1.setInverted(false);
-      m_Joint2.setInverted(false);
-
-    }
-
-    c = Math.sqrt((x * x) + (y * y));
-    angleY = Math.asin(y/c);
-    double ACalc = ((b * b) + (c * c) - (a * a)) / (2 * c * b); // calculate cosine angle A
-//        System.out.println("ACalc (before limit)", ACalc);
-//        if (ACalc < -1) ACalc = -1; else if (ACalc > 1) ACalc = 1;
-//        if (ACalc > 1) {
-
-//            A = 0 - Math.acos(ACalc - 1.0);
-//            A = 0;
-
-//        } else {
-
-//            angleA = Math.acos(ACalc);
-
-//        }
-//        System.out.println("ACalc", ACalc);
-    angleA = Math.acos(ACalc); // Find angle A
-    joint1Angle = (Math.PI / 2) - (angleY + angleA);
-
-    double cosineJoint2 = ((a * a) + (b * b) - (c * c)) / (2 * a * b); // calculate cosine Joint2 or angle C
-    joint2Angle = Math.acos(cosineJoint2);
-
-    System.out.println("Joint 1 Angle: " + Math.toDegrees(joint1Angle));
-//        System.out.println("Sin(A - a little bit)", Math.sin(A - 0.00002));
-
-//        if (Math.sin(A) < Math.sin(A - 0.00002)) {
-
-//        joint2Angle = (Math.PI / 2.0) - Math.asin(joint2Calc) + (Math.PI / 2.0);
-
-//        } else {
-
-//            joint2Angle = Math.asin(joint2Calc);
-
-//        }
-
-    System.out.println("Joint 2 Angle: " + Math.toDegrees(joint2Angle));
-//
-//        if (Math.asin(joint2Calc) < Math.asin(joint2Calc - 0.0002)) {
-//
-//
-//
-//        } else {
-//
-//            joint2Angle = Math.asin(joint2Calc);
-//
-//        }
-
-//        System.out.println("Y", Y);
-//        System.out.println("A", A);
-//        System.out.println("Y + A", Y + A);
-//        System.out.println("effectiveLength", c);
-
 
   }
 
