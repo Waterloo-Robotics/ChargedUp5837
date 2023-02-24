@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.SensorCollection;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 
 // import java.beans.Encoder;
@@ -24,6 +26,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 // import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Arm.ArmState;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -38,6 +41,8 @@ public class Robot extends TimedRobot {
   WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
   private final MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
 
+  SensorCollection Joint2Enc = m_driveRight1.getSensorCollection();
+
   WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
   WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
   private final MotorControllerGroup mg_leftDrive = new MotorControllerGroup(m_driveLeft1, m_driveLeft2);
@@ -49,11 +54,13 @@ public class Robot extends TimedRobot {
   // RelativeEncoder encoder = neo.getEncoder();
   
   
-  private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
+  // private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
   private final XboxController c_controller = new XboxController(1);
   Joystick bbRight = new Joystick(0);
   Joystick bbLeft = new Joystick(3);
   private final Timer timer = new Timer();
+
+  Arm arm = new Arm(m_driveRight1);
 
   public Arm.ArmState armState = Arm.ArmState.home;
   // ADIS16470_IMU imu = new ADIS16470_IMU();
@@ -69,7 +76,14 @@ public class Robot extends TimedRobot {
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
     mg_leftDrive.setInverted(true);
-    mg_Joint1.setInverted(true);
+    Arm.mg_Joint1.setInverted(true);
+    // Arm.m_Joint1_1.getEncoder().setInverted(true);
+  }
+
+  public void robotPeriodic() {
+
+    SmartDashboard.putNumber("Joint 2 Abs Enc", Joint2Enc.getPulseWidthPosition());
+
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -120,9 +134,13 @@ public class Robot extends TimedRobot {
 
     // neo.getEncoder().setPosition(0);
     // imu.setYawAxis(ADIS16470_IMU.IMUAxis.kY);
+    arm.setArmCoordinates(36, 15);
+    // System.out.println(Math.pow(2, 3));
+    Arm.isHomed = false;
 
   }
 
+  boolean isAuto = false;
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
@@ -180,17 +198,44 @@ public class Robot extends TimedRobot {
 
     //  y1Math = y1Math * 0.25;
     //  y2Math = y2Math * 0.25;
+
+    if (c_controller.getRightBumperPressed()) Arm.m_Joint2.getEncoder().setPosition(0);
+
+    if (c_controller.getStartButtonPressed()) armState = ArmState.home;
+    if (c_controller.getXButtonPressed()) armState = ArmState.conePickup;
+    if (c_controller.getYButtonPressed()) armState = ArmState.coneScoreLow;
     if (c_controller.getLeftX() > -0.1 && c_controller.getLeftX() < 0.1) {
 
       leftXMath = 0;
 
     } else leftXMath = c_controller.getLeftX() * 0.1;
 
-//    setJoint1(leftXMath);
+    if (c_controller.getRightX() > -0.1 && c_controller.getRightX() < 0.1) {
 
-//    if (c_controller.getAButtonPressed()) m_Joint1_1.getEncoder().setPosition(0);
+      rightXMath = 0;
 
-//    System.out.println("Joint 1 NEO enc: " + m_Joint1_1.getEncoder().getPosition());
+    } else rightXMath = c_controller.getRightX() * 0.075;
+
+    if (c_controller.getBButtonPressed() && Arm.isHomed) {
+
+      isAuto = !isAuto;
+
+    }
+    if (isAuto && c_controller.getLeftStickButton()) arm.updateArm(armState);
+    else {
+      
+      arm.setJoint1(leftXMath);
+      arm.homeJoint1(c_controller.getAButtonPressed());
+      arm.setJoint2(rightXMath);
+
+    }
+
+
+    SmartDashboard.putBoolean("Is joint 1 at position", arm.isJoint1AtPosition());
+    SmartDashboard.putBoolean("Is joint 2 at position", arm.isJoint2AtPosition());
+
+
+  //  System.out.println("Joint 1 degrees: " + Arm.m_Joint1_1.getEncoder().getPosition()/* / 64.0 * 360.0*/);
 
     // Arm Testing
 //     m_Joint1.set(y2Math);
@@ -217,6 +262,7 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during test mode. */
   double leftXMath = 0;
+  double rightXMath = 0;
   @Override
   public void testPeriodic() {
 

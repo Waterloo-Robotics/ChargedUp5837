@@ -4,20 +4,32 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
 
 public class Arm {
 
     /* Arm Motor Controllers */
-    CANSparkMax m_Joint1_1 = new CANSparkMax(10, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANSparkMax m_Joint1_2 = new CANSparkMax(11, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANSparkMax m_Joint2 = new CANSparkMax(12, CANSparkMaxLowLevel.MotorType.kBrushless);
-    MotorControllerGroup mg_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
+    static CANSparkMax m_Joint1_1 = new CANSparkMax(10, CANSparkMaxLowLevel.MotorType.kBrushless);
+    static CANSparkMax m_Joint1_2 = new CANSparkMax(11, CANSparkMaxLowLevel.MotorType.kBrushless);
+    static CANSparkMax m_Joint2 = new CANSparkMax(12, CANSparkMaxLowLevel.MotorType.kBrushless);
+    static MotorControllerGroup mg_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
     // Limit Switches for joint 1
     DigitalInput ls_joint1PosLimit = new DigitalInput(0);
     DigitalInput ls_joint1NegLimit = new DigitalInput(1);
+
+    WPI_TalonSRX joint2EncoderTalon;
+
+    
 
     public enum ArmState {
 
@@ -29,21 +41,21 @@ public class Arm {
 
     }
 
-    double joint1kP = 0;
+    double joint1kP = 0.0025;
     double joint1kI = 0;
     double joint1kD = 0;
     PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
 
-    double joint2kP = 0;
+    double joint2kP = 0.0025;
     double joint2kI = 0;
     double joint2kD = 0;
     PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
 
-    public Arm() {
-
-
-
+    public Arm(WPI_TalonSRX joint2EncoderTalon) {
+        this.joint2EncoderTalon = joint2EncoderTalon;
     }
+
+    public static boolean isHomed = false;
 
     // Set Arm Position(x, y) return boolean isValidPosition
 
@@ -77,6 +89,24 @@ public class Arm {
 
         System.out.println("Joint 2 Angle: " + Math.toDegrees(joint2Angle));
 
+        SmartDashboard.putNumber("x", x);
+        SmartDashboard.putNumber("y", y);
+        SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
+        SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
+
+    }
+
+    public boolean isArmPositionValid(double x, double y) {
+
+        setArmCoordinates(x, y);
+        return (c <= a + b) && // not longer than physically possible
+        (c >= b - a) && // not shorter than physically possible
+        (Math.toDegrees(joint1Angle) < 60 && Math.toDegrees(joint1Angle) > -60) && // joint 1 isn't outside of limits
+        (Math.toDegrees(joint2Angle) < 120 && Math.toDegrees(joint2Angle) > -120) && // joint 2 isn't outside of limits
+        (y <= 78.0) && // doesn't exceed height limit
+        ((Math.sin(joint1Angle) * b > -15) && x > 15 || (Math.sin(joint1Angle) * b < 15) && x < -15); // make sure we aren't outside both sides of the robot
+
+
     }
 
     double x, y = 0;
@@ -97,16 +127,31 @@ public class Arm {
                 break;
 
             case home:
-                x = 0;
-                y = 0;
-                joint1Angle = 0;
-                joint2Angle = 0;
+                x = 20;
+                y = 10;
+                // joint1Angle = 0;
+                // joint2Angle = 0;
                 break;
 
         }
-        if (armState != ArmState.home) setArmCoordinates(x, y);
-//    joint1PID.setSetpoint(joint1Angle);
-//    joint2PID.setSetpoint(joint2Angle);
+        /*if (armState != ArmState.home)*/ 
+        if (isArmPositionValid(x, y)) {
+
+            joint1PID.setSetpoint(Math.toDegrees(joint1Angle));
+            joint2PID.setSetpoint(Math.toDegrees(joint2Angle));
+
+            joint1Speed = joint1PID.calculate(joint1CurrentPosition());
+            joint2Speed = joint2PID.calculate(joint2CurrentPosition());
+
+            if (joint1Speed > 0 && joint1Speed > 0.2) joint1Speed = 0.2;
+            else if (joint1Speed < 0 && joint1Speed < -0.2) joint1Speed = -0.2;
+            if (isHomed) setJoint1(joint1Speed);
+
+            if (joint2Speed > 0 && joint2Speed > 0.2) joint2Speed = 0.2;
+            else if (joint2Speed < 0 && joint2Speed < -0.2) joint2Speed = -0.2;
+            if (isHomed) setJoint2(joint2Speed);
+        
+        }
 
         SmartDashboard.putNumber("x", x);
         SmartDashboard.putNumber("y", y);
@@ -116,10 +161,6 @@ public class Arm {
         //  joint1Pos = joint1Enc.get() * 2 * Math.PI;
 //    joint2Pos = joint2Enc.get() * 2 * Math.PI;
 
-        joint1Speed = joint1PID.calculate(joint1Pos);
-//    joint2Speed = joint2PID.calculate(joint2Pos);
-
-        setJoint1(joint1Speed);
 //     m_Joint2.set(joint2Speed);
 
     }
@@ -130,6 +171,14 @@ public class Arm {
 
             joint1Speed = 0;
 
+        } else if (power > 0.2) {
+
+            joint1Speed = 0.2;
+
+        } else if (power < -0.2) {
+
+            joint1Speed = -0.2;
+
         } else {
 
             joint1Speed = power;
@@ -138,6 +187,75 @@ public class Arm {
 
         mg_Joint1.set(joint1Speed);
 
+        SmartDashboard.putNumber("Joint 1 Angle", joint1CurrentPosition());
+
+    }
+
+    public void setJoint2(double power) {
+
+        if (power > 0.2) {
+
+            joint2Speed = 0.2;
+
+        } else if (power < -0.2) {
+
+            joint2Speed = -0.2;
+
+        } else {
+
+            joint2Speed = power;
+
+        }
+
+        m_Joint2.set(joint2Speed);
+        // SmartDashboard.putNumber("Joint 2 Angle", joint2Enc.getPosition()/*joint2CurrentPosition()*/);
+
+    }
+
+    public double joint1CurrentPosition() {
+
+        return -m_Joint1_1.getEncoder().getPosition() / 64.0 * 360.0;
+
+    }
+
+    public double joint2CurrentPosition() {
+
+        return m_Joint2.getEncoder().getPosition() / 64.0 * 360.0;
+
+    }
+
+    public boolean isJoint1AtPosition() {
+
+        if (joint1CurrentPosition() + 5 > Math.toDegrees(joint1Angle) && joint1CurrentPosition() - 5 < Math.toDegrees(joint1Angle)) return true;
+        else return false;
+
+    }
+
+    public boolean isJoint2AtPosition() {
+
+        if (joint2CurrentPosition() + 5 > Math.toDegrees(joint2Angle) && joint2CurrentPosition() - 5 < Math.toDegrees(joint2Angle)) return true;
+        else return false;
+
+    }
+
+    boolean isHomeActive = false;
+
+    public void homeJoint1(boolean button) {
+
+        if (button) isHomeActive = true;
+
+        if (isHomeActive) setJoint1(0.05);
+
+        if (m_Joint1_1.getEncoder().getVelocity() < -0.01 && !ls_joint1PosLimit.get()) {
+        
+            m_Joint1_1.getEncoder().setPosition(24.59508514404297 / -2.0);
+            isHomeActive = false;
+            isHomed = true;
+
+        }
+
+        // System.out.println("Velocity: " + m_Joint1_1.getEncoder().getVelocity());
+        
     }
 
 }

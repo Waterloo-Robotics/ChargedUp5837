@@ -1,12 +1,22 @@
 <xml version="1.0">
 <dashboard>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="485" y="185"/>
+		<property name="Text" value="Joint 1 Angle"/>
+	</static-widget>
+	<widget field="Joint 1 Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="405" y="36"/>
+		<width>219</width>
+		<property name="Upper Limit" value="70.0"/>
+		<property name="Lower Limit" value="-70.0"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="279" y="180"/>
 		<property name="Text" value="Joint 2 Angle"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="92" y="184"/>
-		<property name="Text" value="Joint 1 Angle"/>
+		<location x="66" y="184"/>
+		<property name="Text" value="Joint 1 Calculated Angle"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="569" y="9"/>
@@ -15,8 +25,9 @@
 		<property name="Text" value="ROBOT CONNECTION STATUS"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
-		<location x="0" y="0"/>
+		<location x="2" y="0"/>
 		<width>1356</width>
+		<height>35</height>
 		<property name="Graphics" value="Rounded"/>
 	</static-widget>
 	<widget field="joint2Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
@@ -35,5 +46,6 @@
 <live-window>
 </live-window>
 	<hidden field="x"/>
+	<hidden field="Joint 1 NEO enc"/>
 	<hidden field="y"/>
 </xml>
