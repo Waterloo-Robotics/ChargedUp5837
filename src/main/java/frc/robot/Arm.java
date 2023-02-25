@@ -14,6 +14,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.ctre.phoenix.motorcontrol.SensorCollection;
 
 public class Arm {
 
@@ -37,16 +38,16 @@ public class Arm {
         coneScoreGround, cubeScoreGround,
         coneScoreLow, cubeScoreLow,
         coneScoreHigh, cubeScoreHigh,
-        home, homeSequence
+        home, manual
 
     }
 
-    double joint1kP = 0.0025;
+    double joint1kP = 0.004;
     double joint1kI = 0;
     double joint1kD = 0;
     PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
 
-    double joint2kP = 0.0025;
+    double joint2kP = 0.004;
     double joint2kI = 0;
     double joint2kD = 0;
     PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
@@ -85,12 +86,24 @@ public class Arm {
         double cosineJoint2 = ((a * a) + (b * b) - (c * c)) / (2 * a * b); // calculate cosine Joint2 or angle C
         joint2Angle = Math.acos(cosineJoint2);
 
-        System.out.println("Joint 1 Angle: " + Math.toDegrees(joint1Angle));
+        if ((x < 0.5 && x > -0.5) && (y < 9.5)) {
 
-        System.out.println("Joint 2 Angle: " + Math.toDegrees(joint2Angle));
+            joint1Angle = 0;
+            joint2Angle = 0;
 
-        SmartDashboard.putNumber("x", x);
-        SmartDashboard.putNumber("y", y);
+        }
+
+        if (x < 0) {
+
+            joint1Angle = -joint1Angle;
+            joint2Angle = -joint2Angle;
+
+        }
+
+        // System.out.println("Joint 1 Angle: " + Math.toDegrees(joint1Angle));
+
+        // System.out.println("Joint 2 Angle: " + Math.toDegrees(joint2Angle));
+
         SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
         SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
 
@@ -99,44 +112,53 @@ public class Arm {
     public boolean isArmPositionValid(double x, double y) {
 
         setArmCoordinates(x, y);
-        return (c <= a + b) && // not longer than physically possible
-        (c >= b - a) && // not shorter than physically possible
-        (Math.toDegrees(joint1Angle) < 60 && Math.toDegrees(joint1Angle) > -60) && // joint 1 isn't outside of limits
-        (Math.toDegrees(joint2Angle) < 120 && Math.toDegrees(joint2Angle) > -120) && // joint 2 isn't outside of limits
-        (y <= 78.0) && // doesn't exceed height limit
-        ((Math.sin(joint1Angle) * b > -15) && x > 15 || (Math.sin(joint1Angle) * b < 15) && x < -15); // make sure we aren't outside both sides of the robot
-
+        return 
+        (c <= (a + b)) && // not longer than physically possible
+        (c >= (b - a)) && // not shorter than physically possible
+        ((Math.toDegrees(joint1Angle) <= 60) && (Math.toDegrees(joint1Angle) >= -60)) && // joint 1 isn't outside of limits
+        ((Math.toDegrees(joint2Angle) <= 120) && (Math.toDegrees(joint2Angle) >= -120)) && // joint 2 isn't outside of limits
+        (y <= 70.5) && // doesn't exceed height limit
+        (x <= 63.0 && x >= -63.0); // doesn't exceed 48 inches from frame
 
     }
 
-    double x, y = 0;
+    // double x, y = 0;
     double joint1Pos, joint2Pos = 0;
     double joint1Speed, joint2Speed = 0;
-    public void updateArm(ArmState armState) {
+    public static double lastValidX = 0;
+    public static double lastValidY = 0;
+    public void updateArm(double x, double y) {
 
-        switch (armState) {
+        // switch (armState) {
 
-            case conePickup:
-                x = 30;
-                y = 5;
-                break;
+        //     case conePickup:
+        //         x = 30;
+        //         y = 5;
+        //         break;
 
-            case coneScoreLow:
-                x = 28;
-                y = 38;
-                break;
+        //     case coneScoreLow:
+        //         x = 28;
+        //         y = 38;
+        //         break;
 
-            case home:
-                x = 20;
-                y = 10;
-                // joint1Angle = 0;
-                // joint2Angle = 0;
-                break;
+        //     case home:
+        //         x = 0;
+        //         y = 9;
+        //         // joint1Angle = 0;
+        //         // joint2Angle = 0;
+        //         break;
 
-        }
+        // }
         /*if (armState != ArmState.home)*/ 
         if (isArmPositionValid(x, y)) {
 
+            setArmCoordinates(x, y);
+            if (x == 0 && y == 9) {
+
+                joint1Angle = 0;
+                joint2Angle = 0;
+
+            }
             joint1PID.setSetpoint(Math.toDegrees(joint1Angle));
             joint2PID.setSetpoint(Math.toDegrees(joint2Angle));
 
@@ -151,6 +173,10 @@ public class Arm {
             else if (joint2Speed < 0 && joint2Speed < -0.2) joint2Speed = -0.2;
             if (isHomed) setJoint2(joint2Speed);
         
+        } else {
+
+
+
         }
 
         SmartDashboard.putNumber("x", x);
@@ -208,7 +234,7 @@ public class Arm {
         }
 
         m_Joint2.set(joint2Speed);
-        // SmartDashboard.putNumber("Joint 2 Angle", joint2Enc.getPosition()/*joint2CurrentPosition()*/);
+        SmartDashboard.putNumber("Joint 2 Angle", joint2CurrentPosition());
 
     }
 
@@ -220,7 +246,7 @@ public class Arm {
 
     public double joint2CurrentPosition() {
 
-        return m_Joint2.getEncoder().getPosition() / 64.0 * 360.0;
+        return (Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0 + joint1CurrentPosition(); // 0 = 490, 
 
     }
 
@@ -238,13 +264,16 @@ public class Arm {
 
     }
 
-    boolean isHomeActive = false;
+    public static boolean isHomeActive = false;
 
     public void homeJoint1(boolean button) {
 
         if (button) isHomeActive = true;
 
         if (isHomeActive) setJoint1(0.05);
+        joint2PID.setSetpoint(0);
+        joint2Speed = joint2PID.calculate(joint2CurrentPosition());
+        setJoint2(joint2Speed);
 
         if (m_Joint1_1.getEncoder().getVelocity() < -0.01 && !ls_joint1PosLimit.get()) {
         

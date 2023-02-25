@@ -37,11 +37,9 @@ import frc.robot.Arm.ArmState;
 public class Robot extends TimedRobot {
 
   /* Drive Base Motor Controllers */
-  WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
+  public static WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
   WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
   private final MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
-
-  SensorCollection Joint2Enc = m_driveRight1.getSensorCollection();
 
   WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
   WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
@@ -53,12 +51,13 @@ public class Robot extends TimedRobot {
   // SparkMaxAbsoluteEncoder encoder2 = neo.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   // RelativeEncoder encoder = neo.getEncoder();
   
-  
   // private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
   private final XboxController c_controller = new XboxController(1);
-  Joystick bbRight = new Joystick(0);
-  Joystick bbLeft = new Joystick(3);
+  Joystick bbRight = new Joystick(3);
+  Joystick bbLeft = new Joystick(2);
   private final Timer timer = new Timer();
+
+  public static SensorCollection Joint2Enc = Robot.m_driveRight1.getSensorCollection();
 
   Arm arm = new Arm(m_driveRight1);
 
@@ -82,7 +81,7 @@ public class Robot extends TimedRobot {
 
   public void robotPeriodic() {
 
-    SmartDashboard.putNumber("Joint 2 Abs Enc", Joint2Enc.getPulseWidthPosition());
+    // SmartDashboard.putNumber("Joint 2 Abs Enc", Joint2Enc.getPulseWidthPosition());
 
   }
 
@@ -134,13 +133,15 @@ public class Robot extends TimedRobot {
 
     // neo.getEncoder().setPosition(0);
     // imu.setYawAxis(ADIS16470_IMU.IMUAxis.kY);
-    arm.setArmCoordinates(36, 15);
+    // arm.setArmCoordinates(36, 15);
     // System.out.println(Math.pow(2, 3));
     Arm.isHomed = false;
 
   }
 
   boolean isAuto = false;
+  boolean movingAuto = false;
+  double x, y = 0;
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
@@ -199,11 +200,11 @@ public class Robot extends TimedRobot {
     //  y1Math = y1Math * 0.25;
     //  y2Math = y2Math * 0.25;
 
-    if (c_controller.getRightBumperPressed()) Arm.m_Joint2.getEncoder().setPosition(0);
+    // if (c_controller.getRightBumperPressed()) Arm.m_Joint2.getEncoder().setPosition(0);
 
-    if (c_controller.getStartButtonPressed()) armState = ArmState.home;
-    if (c_controller.getXButtonPressed()) armState = ArmState.conePickup;
-    if (c_controller.getYButtonPressed()) armState = ArmState.coneScoreLow;
+    if (c_controller.getStartButtonPressed()) {armState = ArmState.home; movingAuto = true;}
+    if (c_controller.getXButtonPressed()) {armState = ArmState.conePickup; movingAuto = true;}
+    if (c_controller.getBButtonPressed()) {armState = ArmState.coneScoreLow; movingAuto = true;}
     if (c_controller.getLeftX() > -0.1 && c_controller.getLeftX() < 0.1) {
 
       leftXMath = 0;
@@ -216,12 +217,69 @@ public class Robot extends TimedRobot {
 
     } else rightXMath = c_controller.getRightX() * 0.075;
 
-    if (c_controller.getBButtonPressed() && Arm.isHomed) {
+    if (c_controller.getBackButtonPressed() && Arm.isHomed) {
 
       isAuto = !isAuto;
 
     }
-    if (isAuto && c_controller.getLeftStickButton()) arm.updateArm(armState);
+
+    if (c_controller.getLeftY() > -0.1 && c_controller.getLeftY() < 0.1) {
+
+      leftYMath = 0;
+
+    } else leftYMath = c_controller.getLeftY() * 0.1;
+
+    switch (armState) {
+
+      case conePickup:
+          x = 30;
+          y = 5;
+          break;
+
+      case coneScoreLow:
+          x = 28;
+          y = 38;
+          break;
+
+      case home:
+          x = 0;
+          y = 9;
+          // joint1Angle = 0;
+          // joint2Angle = 0;
+          break;
+
+      default:
+      break;
+
+  }
+
+  if (bbRight.getY() > 0.5 || bbRight.getY() < -0.5 || bbRight.getX() > 0.5 || bbRight.getX() < -0.5) armState = ArmState.manual;
+
+  x += deadZone(bbRight.getX()) * 0.18;
+  y += deadZone(bbRight.getY()) * -0.18;
+  
+  SmartDashboard.putBoolean("Is Valid", arm.isArmPositionValid(x, y));
+  SmartDashboard.putNumber("Attempted x", x);
+  SmartDashboard.putNumber("Attempted y", y);
+
+  if (!arm.isArmPositionValid(x, y)) {
+
+    x = Arm.lastValidX;
+    y = Arm.lastValidY;
+
+  } else {
+
+    Arm.lastValidX = x;
+    Arm.lastValidY = y;
+
+  }
+  SmartDashboard.putNumber("Valid x", x);
+  SmartDashboard.putNumber("Valid y", y);
+
+    arm.setArmCoordinates(x, y);
+
+    if (isAuto) arm.updateArm(x, y);
+  
     else {
       
       arm.setJoint1(leftXMath);
@@ -233,6 +291,8 @@ public class Robot extends TimedRobot {
 
     SmartDashboard.putBoolean("Is joint 1 at position", arm.isJoint1AtPosition());
     SmartDashboard.putBoolean("Is joint 2 at position", arm.isJoint2AtPosition());
+    SmartDashboard.putBoolean("Auto Status", isAuto);
+    SmartDashboard.putBoolean("Homed", arm.isHomed);
 
 
   //  System.out.println("Joint 1 degrees: " + Arm.m_Joint1_1.getEncoder().getPosition()/* / 64.0 * 360.0*/);
@@ -261,13 +321,20 @@ public class Robot extends TimedRobot {
   public void testInit() {}
 
   /** This function is called periodically during test mode. */
-  double leftXMath = 0;
+  double leftXMath, leftYMath = 0;
   double rightXMath = 0;
   @Override
   public void testPeriodic() {
 
     // if (bbRight.getRawButton(1)) setArmCoordinates(36, 15);
     
+
+  }
+
+  public double deadZone(double input) {
+
+    if (input < 0.1 && input > -0.1) return 0;
+    else return input;
 
   }
 
