@@ -14,7 +14,12 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
+
+import edu.wpi.first.wpilibj.PneumaticsControlModule;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 public class Arm {
 
@@ -24,13 +29,17 @@ public class Arm {
     static CANSparkMax m_Joint2 = new CANSparkMax(12, CANSparkMaxLowLevel.MotorType.kBrushless);
     static MotorControllerGroup mg_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
+    static CANSparkMax m_Joint3 = new CANSparkMax(13, MotorType.kBrushless);
+
     // Limit Switches for joint 1
     DigitalInput ls_joint1PosLimit = new DigitalInput(0);
     DigitalInput ls_joint1NegLimit = new DigitalInput(1);
 
     WPI_TalonSRX joint2EncoderTalon;
 
-    
+    PneumaticsControlModule pmc = new PneumaticsControlModule(1);
+    DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
+    DoubleSolenoid joint2Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 3, 2);
 
     public enum ArmState {
 
@@ -38,7 +47,8 @@ public class Arm {
         coneScoreGround, cubeScoreGround,
         coneScoreLow, cubeScoreLow,
         coneScoreHigh, cubeScoreHigh,
-        home, manual
+        home, 
+        manual
 
     }
 
@@ -165,13 +175,25 @@ public class Arm {
             joint1Speed = joint1PID.calculate(joint1CurrentPosition());
             joint2Speed = joint2PID.calculate(joint2CurrentPosition());
 
-            if (joint1Speed > 0 && joint1Speed > 0.2) joint1Speed = 0.2;
-            else if (joint1Speed < 0 && joint1Speed < -0.2) joint1Speed = -0.2;
-            if (isHomed) setJoint1(joint1Speed);
+            if (!isJoint1AtPosition()) {
+                if (isHomed) setJoint1(joint1Speed);
+                joint1Brake.set(DoubleSolenoid.Value.kForward);
+            } else {
 
-            if (joint2Speed > 0 && joint2Speed > 0.2) joint2Speed = 0.2;
-            else if (joint2Speed < 0 && joint2Speed < -0.2) joint2Speed = -0.2;
-            if (isHomed) setJoint2(joint2Speed);
+                joint1Brake.set(DoubleSolenoid.Value.kReverse);
+                setJoint1(0);
+
+            }
+
+            if (!isJoint2AtPosition()) {
+                if (isHomed) setJoint2(joint2Speed);
+                joint2Brake.set(DoubleSolenoid.Value.kForward);
+            } else {
+
+                joint2Brake.set(DoubleSolenoid.Value.kReverse);
+                setJoint2(0);
+
+            }
         
         } else {
 
