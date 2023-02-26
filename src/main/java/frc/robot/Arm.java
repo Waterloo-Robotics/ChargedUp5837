@@ -19,6 +19,7 @@ import com.ctre.phoenix.motorcontrol.SensorCollection;
 
 import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 public class Arm {
@@ -38,35 +39,86 @@ public class Arm {
     WPI_TalonSRX joint2EncoderTalon;
 
     PneumaticsControlModule pmc = new PneumaticsControlModule(1);
-    DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
-    DoubleSolenoid joint2Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 3, 2);
-
+    public static DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
+    public static DoubleSolenoid joint2Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 2, 3);
+    public static DoubleSolenoid intake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 4, 5);
+    public static DoubleSolenoid coneSwitch = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 6, 7);
+// state of arm
     public enum ArmState {
 
-        conePickup, cubePickup,
-        coneScoreGround, cubeScoreGround,
-        coneScoreLow, cubeScoreLow,
-        coneScoreHigh, cubeScoreHigh,
-        home, 
+        goConePickup, conePickup,
+        goConeScoreGround, coneScoreGround, 
+        goConeScoreLow, coneScoreLow, 
+        goConeScoreHigh, coneScoreHigh, 
+
+        goCubePickup, cubePickup,
+        goCubeScoreGround, cubeScoreGround,
+        goCubeScoreLow, cubeScoreLow,
+        goCubeScoreHigh, cubeScoreHigh, 
+
+        goFrontHome, frontHome, 
+        goBackHome, backHome, 
+        goHome, home, 
         manual
 
     }
 
-    double joint1kP = 0.004;
-    double joint1kI = 0;
-    double joint1kD = 0;
+    public enum ArmControlState {
+
+        manual,
+        newPath,
+        runningPath,
+        completedPath
+
+    }
+
+    public static ArmControlState armControlState = ArmControlState.manual;
+
+    int numArmStates = 12;
+
+    double[][] armSetPositions = new double[numArmStates][3];
+
+    // armSetPositions[ArmState.conePickup] = {30, 5, 0};
+
+    public enum IntakeState {
+
+        coneIntakeForward, coneIntakeBack,
+        cubeOpen, cubeClosed,
+        coneClosed
+
+    }
+
+    double joint1kP = 0.0047;
+    double joint1kI = 0.0026;
+    double joint1kD = 0.0027;
     PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
 
     double joint2kP = 0.004;
-    double joint2kI = 0;
-    double joint2kD = 0;
+    double joint2kI = 0.0002;
+    double joint2kD = 0.0012;
     PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
 
+    double joint3kP = 0.002;
+    double joint3kI = 0;
+    double joint3kD = 0;
+    PIDController joint3PID = new PIDController(joint2kP, joint2kI, joint2kD);
+
     public Arm(WPI_TalonSRX joint2EncoderTalon) {
+
         this.joint2EncoderTalon = joint2EncoderTalon;
+        m_Joint1_1.setOpenLoopRampRate(3);
+        m_Joint1_2.setOpenLoopRampRate(3);
+        m_Joint2.setOpenLoopRampRate(3);
+        m_Joint3.setOpenLoopRampRate(3);
+        joint1PID.setTolerance(5);
+        joint2PID.setTolerance(5);
+        joint3PID.setTolerance(5);
+
     }
 
     public static boolean isHomed = false;
+
+    int joint1AtPositionPersistence, joint2AtPositionPersistence;
 
     // Set Arm Position(x, y) return boolean isValidPosition
 
@@ -84,6 +136,12 @@ public class Arm {
     double b = 42;
 
     double joint2Calc;
+
+    public void setArmCoordinates(ArmPosition position) {
+
+        setArmCoordinates(position.x, position.y);
+
+    }
 
     public void setArmCoordinates(double x, double y) {
 
@@ -133,83 +191,140 @@ public class Arm {
     }
 
     // double x, y = 0;
-    double joint1Pos, joint2Pos = 0;
+    double joint1Pos, joint2Pos, joint2SetPoint = 0;
     double joint1Speed, joint2Speed = 0;
     public static double lastValidX = 0;
     public static double lastValidY = 0;
-    public void updateArm(double x, double y) {
 
-        // switch (armState) {
+    public void updateArm(ArmPosition position) {
 
-        //     case conePickup:
-        //         x = 30;
-        //         y = 5;
-        //         break;
+        double x = position.x;
+        double y = position.y;
+        double z = position.z;
 
-        //     case coneScoreLow:
-        //         x = 28;
-        //         y = 38;
-        //         break;
+        updateArm(x, y, z);
 
-        //     case home:
-        //         x = 0;
-        //         y = 9;
-        //         // joint1Angle = 0;
-        //         // joint2Angle = 0;
-        //         break;
+    }
+    public void updateArm(double x, double y, double z) {
 
-        // }
-        /*if (armState != ArmState.home)*/ 
         if (isArmPositionValid(x, y)) {
 
             setArmCoordinates(x, y);
-            if (x == 0 && y == 9) {
+            if ((x < 0.5 && x > -0.5) && y < 9.5) {
 
                 joint1Angle = 0;
                 joint2Angle = 0;
 
             }
+
+            joint2SetPoint = joint2Angle - joint1Angle;
             joint1PID.setSetpoint(Math.toDegrees(joint1Angle));
-            joint2PID.setSetpoint(Math.toDegrees(joint2Angle));
+            joint2PID.setSetpoint(Math.toDegrees(joint2SetPoint));
 
             joint1Speed = joint1PID.calculate(joint1CurrentPosition());
             joint2Speed = joint2PID.calculate(joint2CurrentPosition());
 
+            dynamicI(joint1PID.getPositionError(), joint2PID.getPositionError());
+            joint3AutoTest(z);
+
             if (!isJoint1AtPosition()) {
                 if (isHomed) setJoint1(joint1Speed);
                 joint1Brake.set(DoubleSolenoid.Value.kForward);
+                joint1AtPositionPersistence = 0;
             } else {
 
-                joint1Brake.set(DoubleSolenoid.Value.kReverse);
-                setJoint1(0);
+                
+                if (joint1AtPositionPersistence > 25) {
+                    joint1Brake.set(DoubleSolenoid.Value.kReverse);
+                } else {
+
+                    joint1AtPositionPersistence++;
+
+                }
 
             }
 
             if (!isJoint2AtPosition()) {
                 if (isHomed) setJoint2(joint2Speed);
                 joint2Brake.set(DoubleSolenoid.Value.kForward);
+                joint2AtPositionPersistence = 0;
             } else {
 
-                joint2Brake.set(DoubleSolenoid.Value.kReverse);
-                setJoint2(0);
+                if (joint2AtPositionPersistence > 50) {
+                    joint2Brake.set(DoubleSolenoid.Value.kReverse);
+                } else {
+
+                    joint2AtPositionPersistence++;
+
+                }
 
             }
         
-        } else {
-
-
-
-        }
+        } else {}
 
         SmartDashboard.putNumber("x", x);
         SmartDashboard.putNumber("y", y);
         SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
         SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
+        SmartDashboard.putNumber("joint2Setpoint", Math.toDegrees(joint2SetPoint));
+        SmartDashboard.putNumber("Joint 1 Power", mg_Joint1.get());
+        SmartDashboard.putNumber("Joint 2 Power", m_Joint2.get());
+        SmartDashboard.putNumber("Joint 1 Error", joint1PID.getPositionError());
+        SmartDashboard.putNumber("Joint 2 Error", joint2PID.getPositionError());
 
         //  joint1Pos = joint1Enc.get() * 2 * Math.PI;
 //    joint2Pos = joint2Enc.get() * 2 * Math.PI;
 
 //     m_Joint2.set(joint2Speed);
+
+    }
+
+    double joint3Speed = 0;
+
+    public void dynamicI(double joint1Error, double joint2Error) {
+
+        if (Math.abs(joint1Error) < 5) {
+
+            joint1PID.setI(0);
+
+        } else if (Math.abs(joint1Error) < 10) {
+
+            joint1PID.setI(joint1kI);
+
+        } else if (Math.abs(joint1Error) < 17) {
+
+            joint1PID.setI(joint1kI * 0.45);
+
+        } else {
+
+            joint1PID.setI(0);
+
+        }
+
+        if (Math.abs(joint2Error) < 5) {
+
+            joint2PID.setI(0);
+
+        } else if (Math.abs(joint2Error) < 15) {
+
+            joint2PID.setI(joint2kI);
+
+        } else {
+
+            joint2PID.setI(0);
+
+        }
+
+    }
+
+    double joint3Angle;
+
+    public void joint3AutoTest(double angle) {
+
+        joint3Angle = angle;
+        joint3PID.setSetpoint(angle);
+        joint3Speed = joint3PID.calculate(joint3CurrentPosition());
+        setJoint3(joint3Speed);
 
     }
 
@@ -233,6 +348,9 @@ public class Arm {
 
         }
 
+        if (joint1Brake.get() == Value.kReverse)
+        { joint1Speed = 0; }
+
         mg_Joint1.set(joint1Speed);
 
         SmartDashboard.putNumber("Joint 1 Angle", joint1CurrentPosition());
@@ -255,8 +373,32 @@ public class Arm {
 
         }
 
+        if (joint2Brake.get() == Value.kReverse)
+        { joint2Speed = 0; }
+
         m_Joint2.set(joint2Speed);
         SmartDashboard.putNumber("Joint 2 Angle", joint2CurrentPosition());
+
+    }
+
+    public void setJoint3(double power) {
+
+        if (power > 0.7) {
+
+            joint3Speed = 0.7;
+
+        } else if (power < -0.7) {
+
+            joint3Speed = -0.7;
+
+        } else {
+
+            joint3Speed = power;
+
+        }
+
+        m_Joint3.set(joint3Speed);
+        // SmartDashboard.putNumber("Joint 2 Angle", joint2CurrentPosition());
 
     }
 
@@ -268,21 +410,37 @@ public class Arm {
 
     public double joint2CurrentPosition() {
 
-        return (Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0 + joint1CurrentPosition(); // 0 = 490, 
+        return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
+
+    }
+
+    public double joint3CurrentPosition() {
+
+        return (m_Joint3.getEncoder().getPosition()) / 60 * 200.0 * 1.125;
 
     }
 
     public boolean isJoint1AtPosition() {
 
-        if (joint1CurrentPosition() + 5 > Math.toDegrees(joint1Angle) && joint1CurrentPosition() - 5 < Math.toDegrees(joint1Angle)) return true;
-        else return false;
+        return (Math.abs(joint1PID.getPositionError()) < 5);
 
     }
 
     public boolean isJoint2AtPosition() {
 
-        if (joint2CurrentPosition() + 5 > Math.toDegrees(joint2Angle) && joint2CurrentPosition() - 5 < Math.toDegrees(joint2Angle)) return true;
-        else return false;
+        return (Math.abs(joint2PID.getPositionError()) < 5);
+
+    }
+
+    public boolean isJoint3AtPosition() {
+
+        return (Math.abs(joint3PID.getPositionError()) < 5);
+
+    }
+
+    public boolean isArmInPosition() {
+
+        return isJoint1AtPosition() && isJoint2AtPosition() && isJoint3AtPosition();
 
     }
 
@@ -307,6 +465,38 @@ public class Arm {
 
         // System.out.println("Velocity: " + m_Joint1_1.getEncoder().getVelocity());
         
+    }
+
+    public void updateIntake(IntakeState intakeState) {
+
+        switch (intakeState) {
+
+            case cubeOpen:
+            intake.set(Value.kForward);
+            coneSwitch.set(Value.kForward);
+            break;
+
+            case coneIntakeForward:
+            intake.set(Value.kReverse);
+            coneSwitch.set(Value.kForward);
+            break;
+
+            case coneIntakeBack:
+            intake.set(Value.kReverse);
+            coneSwitch.set(Value.kReverse);
+            break;
+
+            case cubeClosed:
+            intake.set(Value.kReverse);
+            break;
+            
+            case coneClosed:
+            intake.set(Value.kForward);
+            coneSwitch.set(Value.kForward);
+            break;
+
+        }
+
     }
 
 }

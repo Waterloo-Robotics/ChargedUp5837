@@ -1,22 +1,120 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Current Step" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="677" y="120"/>
+		<width>163</width>
+		<height>29</height>
+	</widget>
+	<widget field="Sequence Steps" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="664" y="89"/>
+		<width>169</width>
+		<height>28</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Image">
+		<location x="1093" y="238"/>
+		<width>65</width>
+		<property name="Image File" value="C:\Users\Unity4Tech\Pictures\Screenshot 2023-02-25 163201.png"/>
+	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="485" y="185"/>
+		<location x="963" y="271"/>
+		<width>69</width>
+		<height>52</height>
+		<property name="Text" value="VALID"/>
+	</static-widget>
+	<widget field="Joint 1 Error" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="39" y="386"/>
+	</widget>
+	<widget field="Joint 2 Error" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="233" y="384"/>
+	</widget>
+	<widget field="Joint 1 Power" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="668" y="45"/>
+	</widget>
+	<widget field="Joint 2 Power" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="669" y="65"/>
+	</widget>
+	<widget field="joint1Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="6" y="34"/>
+		<width>226</width>
+		<property name="Upper Limit" value="60.0"/>
+		<property name="Lower Limit" value="-60.0"/>
+	</widget>
+	<widget field="Homed" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1067" y="57"/>
+		<width>91</width>
+		<height>58</height>
+	</widget>
+	<widget field="Is joint 1 at position" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1208" y="147"/>
+		<width>141</width>
+		<height>56</height>
+	</widget>
+	<widget field="Is joint 2 at position" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1206" y="210"/>
+		<width>146</width>
+		<height>56</height>
+	</widget>
+	<widget field="Attempted x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1185" y="44"/>
+	</widget>
+	<widget field="Attempted y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1188" y="68"/>
+	</widget>
+	<widget field="Valid x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1212" y="94"/>
+	</widget>
+	<widget field="Valid y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1211" y="114"/>
+		<height>20</height>
+	</widget>
+	<widget field="Auto Status" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1068" y="122"/>
+		<width>114</width>
+		<height>62</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="477" y="359"/>
+		<property name="Text" value="Joint 3 Angle"/>
+	</static-widget>
+	<widget field="Joint 3 Enc" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="399" y="207"/>
+		<width>218</width>
+		<property name="Upper Limit" value="230.0"/>
+		<property name="Lower Limit" value="-230.0"/>
+		<property name="Tick Interval" value="45.0"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="276" y="356"/>
+		<property name="Text" value="Joint 2 Angle"/>
+	</static-widget>
+	<widget field="Joint 2 Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="198" y="202"/>
+		<width>226</width>
+		<property name="Upper Limit" value="120.0"/>
+		<property name="Lower Limit" value="-120.0"/>
+	</widget>
+	<widget field="Is Valid" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="901" y="182"/>
+		<width>226</width>
+		<height>219</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="83" y="355"/>
 		<property name="Text" value="Joint 1 Angle"/>
 	</static-widget>
 	<widget field="Joint 1 Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="405" y="36"/>
+		<location x="8" y="203"/>
 		<width>219</width>
 		<property name="Upper Limit" value="70.0"/>
 		<property name="Lower Limit" value="-70.0"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="279" y="180"/>
-		<property name="Text" value="Joint 2 Angle"/>
+		<location x="260" y="182"/>
+		<property name="Text" value="Joint 2 Desired Angle"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="66" y="184"/>
-		<property name="Text" value="Joint 1 Calculated Angle"/>
+		<property name="Text" value="Joint 1 Desired Angle"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="569" y="9"/>
@@ -36,16 +134,10 @@
 		<property name="Upper Limit" value="120.0"/>
 		<property name="Lower Limit" value="-120.0"/>
 	</widget>
-	<widget field="joint1Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="6" y="34"/>
-		<width>232</width>
-		<property name="Upper Limit" value="60.0"/>
-		<property name="Lower Limit" value="-60.0"/>
-	</widget>
 </dashboard>
 <live-window>
 </live-window>
+	<hidden field="joint2Setpoint"/>
 	<hidden field="x"/>
-	<hidden field="Joint 1 NEO enc"/>
 	<hidden field="y"/>
 </xml>
