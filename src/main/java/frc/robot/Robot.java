@@ -73,11 +73,13 @@ public class Robot extends TimedRobot {
   boolean isAuto = false;
   boolean movingAuto = false;
 
+  /* ArmPositions to store where the arm is, and where we want it to go */
   ArmPosition currentArmPosition = new ArmPosition(0, 9, 0);
   ArmPosition desiredArmPosition = new ArmPosition(0, 9, 0);
-  boolean newDesiredArmPosition;
 
+  /* Global Arm Path Planner */
   ArmPathPlanner pathPlanner = new ArmPathPlanner(homeFront, homeBack);
+  /* Global Arm Sequence */
   ArmSequence currentSequence = new ArmSequence();
   
   /**
@@ -139,28 +141,18 @@ public class Robot extends TimedRobot {
      * Driver 2 controls initial joint 3 position
      * */
 
-    // get drive joysticks
-
-    // Dead Zone calculations
-
-    // Update Drivebase
-
-    // Claw Control
-      // rotate claw
-      // Actuate pistons
-
     // Arm Position controls
       // TODO if robot drive fast for extended period of time (a few seconds?) set arm to position within bumpers
 
     // Uncomment for driving
 //    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
-if (bbLeft.getRawButton(1)) intakeState = IntakeState.cubeOpen;
-if (bbLeft.getRawButton(4)) intakeState = IntakeState.cubeClosed;
-if (bbRight.getRawButton(1)) intakeState = IntakeState.coneIntakeBack;
-if (bbRight.getRawButton(4)) intakeState = IntakeState.coneIntakeForward;
-if (bbRight.getRawButton(2)) intakeState = IntakeState.coneClosed;
-arm.updateIntake(intakeState);
+  if (bbLeft.getRawButton(1)) intakeState = IntakeState.cubeOpen;
+  if (bbLeft.getRawButton(4)) intakeState = IntakeState.cubeClosed;
+  if (bbRight.getRawButton(1)) intakeState = IntakeState.coneIntakeBack;
+  if (bbRight.getRawButton(4)) intakeState = IntakeState.coneIntakeForward;
+  if (bbRight.getRawButton(2)) intakeState = IntakeState.coneClosed;
+  arm.updateIntake(intakeState);
 
   if (bbLeft.getRawButton(10)) {armState = ArmState.goHome; movingAuto = true;}
   if (bbRight.getRawButton(8)) {armState = ArmState.goConePickup; movingAuto = true;}
@@ -170,13 +162,13 @@ arm.updateIntake(intakeState);
   if (bbRight.getRawButton(5)) {armState = ArmState.goConeScoreGround; movingAuto = true;}
   if (bbRight.getRawButton(6)) {armState = ArmState.goConeScoreLow; movingAuto = true;}
 
+  /* Enable Inverse Kinematic PID Control of arm */
   if (c_controller.getBackButtonPressed() && Arm.isHomed) {
-
     currentArmPosition.setCoordinates(0, 9, 0);
     isAuto = !isAuto;
-
   }
 
+  /* Command arm to go to different positions */
   switch (armState) {
 
     case goConePickup:
@@ -220,80 +212,130 @@ arm.updateIntake(intakeState);
 
   }
 
+  /* If Inverse Kinematic PID Control is enabled */
   if (isAuto) {
 
-    if (bbLeft.getRawButton(2)) currentArmPosition.incrementZ(-2);
-    else if (bbLeft.getRawButton(3)) currentArmPosition.incrementZ(2);
-    if (currentArmPosition.z > 225) currentArmPosition.z = 225;
-    else if (currentArmPosition.z < -225) currentArmPosition.z = -225;
-    if (bbRight.getRawButton(5)) currentArmPosition.z = 0;
-
-    if (Math.abs(bbRight.getY()) > 0.5 || 
-        Math.abs(bbRight.getX()) > 0.5 || 
-        bbLeft.getRawButton(2) || 
-        bbLeft.getRawButton(3)) {
-      
+    /*************************************************************************************
+      START JOINT 3 MANUAL CONTROL
+    *************************************************************************************/
+    /* If manual inputs are present */
+    if (Math.abs(bbRight.getY()) > 0.5 || Math.abs(bbRight.getX()) > 0.5 || 
+        bbLeft.getRawButton(2) || bbLeft.getRawButton(3)) 
+    {
+      /* Put the arm into manual mode */
       armState = ArmState.manual;
       Arm.armControlState = ArmControlState.manual;
-    
     }
 
+    /* Rotate Joint 3 towards back of robot */
+    if (bbLeft.getRawButton(2)) {
+      currentArmPosition.incrementZ(-2);
+    }
+    /* Rotate Joint 3 towards front of robot */
+    else if (bbLeft.getRawButton(3)) {
+      currentArmPosition.incrementZ(2);
+    }
+
+    /* If Joint 3 angle is over 225 degrees reset to 225*/
+    if (currentArmPosition.z > 225) {
+      currentArmPosition.z = 225;
+    }
+    /* If Joint 3 angle is under -225 degrees reset to -225*/
+    else if (currentArmPosition.z < -225) {
+      currentArmPosition.z = -225;
+    }
+
+    if (bbRight.getRawButton(5)) currentArmPosition.z = 0;
+
+    /* Button to reset Joint 3 encoder */
+    if (bbRight.getRawButtonPressed(1)) {
+      Arm.m_Joint3.getEncoder().setPosition(0);
+    }
+    /*************************************************************************************
+      END JOINT 3 MANUAL CONTROL
+    *************************************************************************************/
+
+    /*************************************************************************************
+      START X & Y MANUAL CONTROL
+    *************************************************************************************/
+    /* Increment X & Y */
     currentArmPosition.incrementX(deadZone(bbRight.getX()) * 0.25);
     currentArmPosition.incrementY(deadZone(bbRight.getY()) * -0.25);
 
-    if (currentArmPosition.x < 16 && currentArmPosition.x > -16) {
-      
+    /* If current position is within frame perimeter */
+    if (currentArmPosition.returnSide() == 0) {
+      /* Force Y to be at 9 in to avoid eratic movement*/
       currentArmPosition.y = 9;
+      // TODO: Remove setting Joint 3 to 0 once Arm Path Planning is working
       currentArmPosition.z = 0;
-    
     }
     
+    /* Update SmartDashboard with attempted X & Y */
     SmartDashboard.putBoolean("Is Valid", arm.isArmPositionValid(currentArmPosition.x, currentArmPosition.y));
     SmartDashboard.putNumber("Attempted x", currentArmPosition.x);
     SmartDashboard.putNumber("Attempted y", currentArmPosition.y);
 
+    /* If attempted arm position is invalid during manual control */
     if (!arm.isArmPositionValid(currentArmPosition.x, currentArmPosition.y) && armState == ArmState.manual) {
-
+      /* Reset currentArmPosition to last know valid position */
       currentArmPosition.x = Arm.lastValidX;
       currentArmPosition.y = Arm.lastValidY;
-
-    } else if (armState == ArmState.manual) {
-
+    } 
+    /* If attempted arm position is valid, update last know valid position */
+    else if (armState == ArmState.manual) {
       Arm.lastValidX = currentArmPosition.x;
       Arm.lastValidY = currentArmPosition.y;
-
     }
 
+    /* Update Smart Dashboard with valid X & Y */
     SmartDashboard.putNumber("Valid x", currentArmPosition.x);
     SmartDashboard.putNumber("Valid y", currentArmPosition.y);
-
-    if (bbRight.getRawButtonPressed(1)) Arm.m_Joint3.getEncoder().setPosition(0);
-
-    if (Arm.armControlState == ArmControlState.manual) {
+    /*************************************************************************************
+      END X & Y MANUAL CONTROL
+    *************************************************************************************/
     
-    } else if (Arm.armControlState == ArmControlState.newPath) {
+    /*************************************************************************************
+      START ARM STATE CONTROL
+    *************************************************************************************/
+    if (Arm.armControlState == ArmControlState.manual) {
+      /* If arm is controller manually, the current position is updated above, the arm
+         will be told to run to updated position in the arm.updateArm() call below. 
+        */
+    } 
+    /* If a new desiredArmPositon has been requested */
+    else if (Arm.armControlState == ArmControlState.newPath) {
 
+      /* Put arm in runningPath state */
       Arm.armControlState = ArmControlState.runningPath;
+      /* Create a new sequence to move from currentArmPosition to desiredArmPosition */
       currentSequence = pathPlanner.planPath(currentArmPosition, desiredArmPosition);
+      /* Set currentArmPosition to the first position in the sequence */
       currentArmPosition = currentSequence.nextPosition();
 
-    } else if (Arm.armControlState == ArmControlState.runningPath) {
-
-      if (arm.isArmInPosition() && !currentSequence.sequenceFinished()) {
-
-        currentArmPosition = currentSequence.nextPosition();
-
-      } else if (arm.isArmInPosition() && currentSequence.sequenceFinished()) {
-
-        Arm.armControlState = ArmControlState.completedPath;
-
-      }
-
     }
-
+    /* If the arm is in the middle of a sequence */ 
+    else if (Arm.armControlState == ArmControlState.runningPath) {
+      /* If the arm is in position and the sequence is not finished */
+      if (arm.isArmInPosition() && !currentSequence.sequenceFinished()) {
+        /* set currentArmPosition to next position in the sequence */
+        currentArmPosition = currentSequence.nextPosition();
+      } 
+      /* If the arm is in position and the sequence is finished */
+      else if (arm.isArmInPosition() && currentSequence.sequenceFinished()) {
+        /* Put the arm in a completed path state */
+        Arm.armControlState = ArmControlState.completedPath;
+      }
+    }
+    
+    /* Update Arm PID calculation and motor set speeds */
     arm.updateArm(currentArmPosition);
 
-  } else {
+    /*************************************************************************************
+      END ARM STATE CONTROL
+    *************************************************************************************/
+  }
+  /* Inverse Kinematic PID Control is disabled */
+  else {
 
     Arm.joint1Brake.set(Value.kForward);
     Arm.joint2Brake.set(Value.kForward);
@@ -317,14 +359,12 @@ arm.updateIntake(intakeState);
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {
+  public void testPeriodic() {}
 
-
-
-  }
-
+  /* Apply a fixed dead zone to an input */
   public double deadZone(double input) {
-
+    // TODO: Fix to scale input after deadzone
+    
     if (input < 0.1 && input > -0.1) return 0;
     else return input;
 
