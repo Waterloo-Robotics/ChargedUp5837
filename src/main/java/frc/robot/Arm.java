@@ -1,26 +1,19 @@
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DutyCycle;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.ctre.phoenix.motorcontrol.SensorCollection;
-
 import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
 
 public class Arm {
 
@@ -37,25 +30,40 @@ public class Arm {
     DigitalInput ls_joint1NegLimit = new DigitalInput(1);
 
     WPI_TalonSRX joint2EncoderTalon;
+    WPI_TalonSRX joint1EncoderTalon;
 
     PneumaticsControlModule pmc = new PneumaticsControlModule(1);
     public static DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
     public static DoubleSolenoid joint2Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 2, 3);
     public static DoubleSolenoid intake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 4, 5);
     public static DoubleSolenoid coneSwitch = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 6, 7);
-// state of arm
+
     public enum ArmState {
-
-        goConePickup, conePickup,
-        goConeScoreGround, coneScoreGround, 
-        goConeScoreLow, coneScoreLow, 
-        goConeScoreHigh, coneScoreHigh, 
-
-        goCubePickup, cubePickup,
-        goCubeScoreGround, cubeScoreGround,
-        goCubeScoreLow, cubeScoreLow,
-        goCubeScoreHigh, cubeScoreHigh, 
-
+        /* Cone Pickups */
+        goConePickupFrontGround, conePickupFrontGround,
+        goConePickupBackGround, conePickupBackGround,
+        goConePickupFrontShelf, conePickupFrontShelf,
+        goConePickupBackShelf , conePickupBackShelf,
+        /* Cube Pickups */
+        goCubePickupFrontGround , cubePickupFrontGround,
+        goCubePickupBackGround , cubePickupBackGround,
+        goCubePickupFrontShelf , cubePickupFrontShelf,
+        goCubePickupBackShelf , cubePickupBackShelf,
+        /* Cone Score */
+        goConeScoreFrontLow, coneScoreFrontLow,
+        goConeScoreFrontMiddle, coneScoreFrontMiddle,
+        goConeScoreFrontHigh, coneScoreFrontHigh,
+        goConeScoreBackLow, coneScoreBackLow,
+        goConeScoreBackMiddle, coneScoreBackMiddle,
+        goConeScoreBackHigh, coneScoreBackHigh,
+        /* Cube Score */
+        goCubeScoreFrontLow, cubeScoreFrontLow,
+        goCubeScoreFrontMiddle, cubeScoreFrontMiddle,
+        goCubeScoreFrontHigh, cubeScoreFrontHigh,
+        goCubeScoreBackLow, cubeScoreBackLow,
+        goCubeScoreBackMiddle, cubeScoreBackMiddle,
+        goCubeScoreBackHigh, cubeScoreBackHigh,
+        /* Homes */
         goFrontHome, frontHome, 
         goBackHome, backHome, 
         goHome, home, 
@@ -78,8 +86,6 @@ public class Arm {
 
     double[][] armSetPositions = new double[numArmStates][3];
 
-    // armSetPositions[ArmState.conePickup] = {30, 5, 0};
-
     public enum IntakeState {
 
         coneIntakeForward, coneIntakeBack,
@@ -88,14 +94,14 @@ public class Arm {
 
     }
 
-    double joint1kP = 0.0047;
+    double joint1kP = 0.0050;
     double joint1kI = 0.0026;
     double joint1kD = 0.0027;
     PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
 
-    double joint2kP = 0.004;
-    double joint2kI = 0.0002;
-    double joint2kD = 0.0012;
+    double joint2kP = 0.0055;
+    double joint2kI = 0.0013;
+    double joint2kD = 0.0027;
     PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
 
     double joint3kP = 0.002;
@@ -103,13 +109,19 @@ public class Arm {
     double joint3kD = 0;
     PIDController joint3PID = new PIDController(joint2kP, joint2kI, joint2kD);
 
-    public Arm(WPI_TalonSRX joint2EncoderTalon) {
-
+    public Arm(WPI_TalonSRX joint1EncoderTalon, WPI_TalonSRX joint2EncoderTalon) {
+        
+        /* Joint 1 and 2 Encoders */
+        this.joint1EncoderTalon = joint1EncoderTalon;
         this.joint2EncoderTalon = joint2EncoderTalon;
+        /* Joint 1 Ramp Rate */
         m_Joint1_1.setOpenLoopRampRate(3);
         m_Joint1_2.setOpenLoopRampRate(3);
+        /* Joint 2 and 3 Ramp Rate */
         m_Joint2.setOpenLoopRampRate(3);
         m_Joint3.setOpenLoopRampRate(3);
+
+        /* PID Tolerance */
         joint1PID.setTolerance(5);
         joint2PID.setTolerance(5);
         joint3PID.setTolerance(5);
@@ -120,22 +132,14 @@ public class Arm {
 
     int joint1AtPositionPersistence, joint2AtPositionPersistence;
 
-    // Set Arm Position(x, y) return boolean isValidPosition
+    public static double joint1Angle, joint2Angle = 0;
+    public static double c = 0;
+    public static double angleY, angleA = 0;
 
-    // Set Arm Position(ArmState armState) goes to preset position
+    public static double a = 33;
+    public static double b = 42;
 
-    // Get Arm Position return currentPosition[x, y]
-
-    // Set Claw State(cone or cube, right or left, open or closed) go to preset joint 3 and pneumatics
-
-    double joint1Angle, joint2Angle = 0;
-    double c = 0;
-    double angleY, angleA = 0;
-
-    double a = 33;
-    double b = 42;
-
-    double joint2Calc;
+    public static double joint2Calc;
 
     public void setArmCoordinates(ArmPosition position) {
 
@@ -180,6 +184,7 @@ public class Arm {
     public boolean isArmPositionValid(double x, double y) {
 
         setArmCoordinates(x, y);
+
         return 
         (c <= (a + b)) && // not longer than physically possible
         (c >= (b - a)) && // not shorter than physically possible
@@ -287,6 +292,7 @@ public class Arm {
 
             joint1PID.setI(0);
 
+
         } else if (Math.abs(joint1Error) < 10) {
 
             joint1PID.setI(joint1kI);
@@ -309,6 +315,11 @@ public class Arm {
 
             joint2PID.setI(joint2kI);
 
+        } else if (Math.abs(joint2Error) < 20) {
+
+            // joint2PID.setI(joint2kI * 0.4);
+            joint2PID.setI(0);
+
         } else {
 
             joint2PID.setI(0);
@@ -317,7 +328,7 @@ public class Arm {
 
     }
 
-    double joint3Angle;
+    public static double joint3Angle;
 
     public void joint3AutoTest(double angle) {
 
@@ -334,13 +345,13 @@ public class Arm {
 
             joint1Speed = 0;
 
-        } else if (power > 0.2) {
+        } else if (power > 0.3) {
 
-            joint1Speed = 0.2;
+            joint1Speed = 0.3;
 
-        } else if (power < -0.2) {
+        } else if (power < -0.3) {
 
-            joint1Speed = -0.2;
+            joint1Speed = -0.3;
 
         } else {
 
@@ -352,20 +363,17 @@ public class Arm {
         { joint1Speed = 0; }
 
         mg_Joint1.set(joint1Speed);
-
-        SmartDashboard.putNumber("Joint 1 Angle", joint1CurrentPosition());
-
     }
 
     public void setJoint2(double power) {
 
-        if (power > 0.2) {
+        if (power > 0.25) {
 
-            joint2Speed = 0.2;
+            joint2Speed = 0.25;
 
-        } else if (power < -0.2) {
+        } else if (power < -0.25) {
 
-            joint2Speed = -0.2;
+            joint2Speed = -0.25;
 
         } else {
 
@@ -377,8 +385,6 @@ public class Arm {
         { joint2Speed = 0; }
 
         m_Joint2.set(joint2Speed);
-        SmartDashboard.putNumber("Joint 2 Angle", joint2CurrentPosition());
-
     }
 
     public void setJoint3(double power) {
@@ -404,7 +410,8 @@ public class Arm {
 
     public double joint1CurrentPosition() {
 
-        return -m_Joint1_1.getEncoder().getPosition() / 64.0 * 360.0;
+        // return -m_Joint1_1.getEncoder().getPosition() / 64.0 * 360.0;
+        return ((Robot.Joint1Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
 
     }
 

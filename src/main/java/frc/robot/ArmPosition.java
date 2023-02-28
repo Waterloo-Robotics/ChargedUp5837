@@ -11,11 +11,16 @@ public class ArmPosition {
     static double backThreshold = -16;
 
     /* Constructor */
-    public ArmPosition(double x, double y, double z)
-    {
+    public ArmPosition(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public ArmPosition(ArmPosition armPosition) {
+        this.x = armPosition.x;
+        this.y = armPosition.y;
+        this.z = armPosition.z;
     }
 
     /* Update x,y,z */

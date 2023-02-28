@@ -4,28 +4,18 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.*;
+import com.ctre.phoenix.motorcontrol.SensorCollection;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 // import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 // import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.motorcontrol.SensorCollection;
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.CANSparkMax;
-
-// import java.beans.Encoder;
-
-// import com.fasterxml.jackson.databind.AnnotationIntrospector.ReferenceProperty.Type;
-// import com.revrobotics.EncoderType;
-// import com.revrobotics.RelativeEncoder;
-// import com.revrobotics.SparkMaxAbsoluteEncoder;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
-// import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Arm.ArmControlState;
 import frc.robot.Arm.ArmState;
@@ -40,35 +30,65 @@ import frc.robot.Arm.IntakeState;
 public class Robot extends TimedRobot {
 
   /* Drive Base Motor Controllers */
-  public static WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
-  WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
+  WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
+  public static WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
   private final MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
 
   WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
-  WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
+  public static WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
   private final MotorControllerGroup mg_leftDrive = new MotorControllerGroup(m_driveLeft1, m_driveLeft2);
   
-  // private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
+  private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
   private final XboxController c_controller = new XboxController(1);
   Joystick bbRight = new Joystick(2);
   Joystick bbLeft = new Joystick(3);
   private final Timer timer = new Timer();
 
-  public static SensorCollection Joint2Enc = Robot.m_driveRight1.getSensorCollection();
+  public static SensorCollection Joint2Enc = Robot.m_driveRight2.getSensorCollection();
+  public static SensorCollection Joint1Enc = Robot.m_driveLeft2.getSensorCollection();
 
-  Arm arm = new Arm(m_driveRight1);
+  Arm arm = new Arm(m_driveLeft2, m_driveRight2);
 
   public Arm.ArmState armState = Arm.ArmState.home;
   public Arm.IntakeState intakeState = IntakeState.cubeOpen;
   // ADIS16470_IMU imu = new ADIS16470_IMU();
 
+  boolean coneControl = true;
+
   ArmPosition home = new ArmPosition(0, 9, 0);
   ArmPosition homeFront = new ArmPosition(16, 9, 0);
   ArmPosition homeBack = new ArmPosition(-16, 9, 0);
-  ArmPosition conePickupFront = new ArmPosition(30, 5, 0);
-  ArmPosition conePickupBack = new ArmPosition(-30, 5, 0);
-  ArmPosition coneScoreFront = new ArmPosition(38, 10, 0);
-  ArmPosition coneScoreBack = new ArmPosition(-38, 10, 0);
+
+  /* Pickup Positions */
+  ArmPosition conePickupFrontGround = new ArmPosition(30, 5, 0);
+  ArmPosition conePickupBackGround = new ArmPosition(-30, 5, 0);
+
+  ArmPosition conePickupFrontShelf = new ArmPosition(30, 5, 0);
+  ArmPosition conePickupBackShelf = new ArmPosition(-30, 5, 0);
+
+  ArmPosition cubePickupFrontGround = new ArmPosition(30, 5, 145);
+  ArmPosition cubePickupBackGround = new ArmPosition(-30, 5, -145);
+
+  ArmPosition cubePickupFrontShelf = new ArmPosition(30, 5, 0);
+  ArmPosition cubePickupBackShelf = new ArmPosition(-30, 5, 0);
+  
+  /* Cone Scoring Positions */
+  ArmPosition coneScoreFrontLow = new ArmPosition(30, 5, 0);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(35, 30, 0);
+  ArmPosition coneScoreFrontHigh = new ArmPosition(40, 45, 0);
+
+  ArmPosition coneScoreBackLow = new ArmPosition(-30, 5, 0);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-35, 30, 0);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-40, 45, 0);
+
+  /* Cube Scoring Positions */
+  ArmPosition cubeScoreFrontLow = new ArmPosition(30, 5, 90);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(35, 30, 90);
+  ArmPosition cubeScoreFrontHigh = new ArmPosition(40, 45, 90);
+
+  ArmPosition cubeScoreBackLow = new ArmPosition(-30, 5, -90);
+  ArmPosition cubeScoreBackMiddle = new ArmPosition(-35, 30, -90);
+  ArmPosition cubeScoreBackHigh = new ArmPosition(-40, 45, -90);
 
   boolean isAuto = false;
   boolean movingAuto = false;
@@ -88,6 +108,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    // m_driveLeft1.configOpenloopRamp(1);
+    // m_driveLeft2.configOpenloopRamp(1);
+    // m_driveRight1.configOpenloopRamp(1);
+    // m_driveRight2.configOpenloopRamp(1);
     // imu.calibrate();
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
@@ -98,13 +122,18 @@ public class Robot extends TimedRobot {
   }
 
   public void robotPeriodic() {
+    SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
+    SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
+
 
     SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
     SmartDashboard.putNumber("Sequence Steps", currentSequence.getLength());
     SmartDashboard.putNumber("Current Step", currentSequence.currentIndex);
-    SmartDashboard.putNumber("Current Side", currentArmPosition.returnSide());
-    SmartDashboard.putNumber("Desired Side", desiredArmPosition.returnSide());
-
+    SmartDashboard.putNumber("Joint 3 Desired Angle", Arm.joint3Angle);
+    SmartDashboard.putString("Arm State", String.valueOf(armState));
+    SmartDashboard.putBoolean("Brake 1", Arm.joint1Brake.get() == Value.kReverse);
+    SmartDashboard.putBoolean("Brake 2", Arm.joint2Brake.get() == Value.kReverse);
+    
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -145,22 +174,62 @@ public class Robot extends TimedRobot {
       // TODO if robot drive fast for extended period of time (a few seconds?) set arm to position within bumpers
 
     // Uncomment for driving
-//    m_robotDrive.arcadeDrive(m_controller.getLeftY(), 1 * m_controller.getRightX());
 
-  if (bbLeft.getRawButton(1)) intakeState = IntakeState.cubeOpen;
-  if (bbLeft.getRawButton(4)) intakeState = IntakeState.cubeClosed;
-  if (bbRight.getRawButton(1)) intakeState = IntakeState.coneIntakeBack;
-  if (bbRight.getRawButton(4)) intakeState = IntakeState.coneIntakeForward;
-  if (bbRight.getRawButton(2)) intakeState = IntakeState.coneClosed;
+  /* Claw States */
+
+  /* Switch between Cone and Cube */
+  if (bbLeft.getRawButton(9)) {
+    coneControl = true;
+  } else if (bbLeft.getRawButton(10)) {
+    coneControl = false;
+  }
+
+  /* Home Buttons */
+  if (bbLeft.getRawButton(7)) armState = ArmState.goFrontHome;
+  if (bbLeft.getRawButton(8)) armState = ArmState.goBackHome;
+
+
+  /* Scoring Positions */
+  if (coneControl) {
+    /* Claw Control */
+    if (c_controller.getXButtonPressed()) intakeState = IntakeState.coneIntakeBack;
+    if (c_controller.getBButtonPressed()) intakeState = IntakeState.coneIntakeForward;
+    if (c_controller.getAButtonPressed()) intakeState = IntakeState.coneClosed;
+
+    /* Pickup Positions */
+    if (bbRight.getRawButton(3)) armState = ArmState.goConePickupBackGround;
+    if (bbRight.getRawButton(6)) armState = ArmState.goConePickupFrontGround;
+
+    /* Scoring Positions */
+    if (bbLeft.getRawButton(1)) armState = ArmState.goConeScoreBackLow;
+    if (bbLeft.getRawButton(2)) armState = ArmState.goConeScoreBackMiddle;
+    if (bbLeft.getRawButton(3)) armState = ArmState.goConeScoreBackHigh;
+
+    if (bbLeft.getRawButton(4)) armState = ArmState.goConeScoreFrontLow;
+    if (bbLeft.getRawButton(5)) armState = ArmState.goConeScoreFrontMiddle;
+    if (bbLeft.getRawButton(6)) armState = ArmState.goConeScoreFrontHigh;
+  }
+  else {
+    /* Claw Control */
+    if (c_controller.getXButtonPressed() || c_controller.getBButtonPressed()) intakeState = IntakeState.cubeOpen;
+    if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
+
+    /* Pickup Positions */
+    if (bbRight.getRawButton(3)) armState = ArmState.goCubePickupBackGround;
+    if (bbRight.getRawButton(6)) armState = ArmState.goCubePickupFrontGround;
+
+    /* Scoring Positions */
+    if (bbLeft.getRawButton(1)) armState = ArmState.goCubeScoreBackLow;
+    if (bbLeft.getRawButton(2)) armState = ArmState.goCubeScoreBackMiddle;
+    if (bbLeft.getRawButton(3)) armState = ArmState.goCubeScoreBackHigh;
+
+    if (bbLeft.getRawButton(4)) armState = ArmState.goCubeScoreFrontLow;
+    if (bbLeft.getRawButton(5)) armState = ArmState.goCubeScoreFrontMiddle;
+    if (bbLeft.getRawButton(6)) armState = ArmState.goCubeScoreFrontHigh;
+  }
+
+  /* Set Claw state */
   arm.updateIntake(intakeState);
-
-  if (bbLeft.getRawButton(10)) {armState = ArmState.goHome; movingAuto = true;}
-  if (bbRight.getRawButton(8)) {armState = ArmState.goConePickup; movingAuto = true;}
-  if (c_controller.getBButtonPressed()) {armState = ArmState.goConeScoreLow; movingAuto = true;}
-  if (bbRight.getRawButton(10)) {armState = ArmState.goFrontHome; movingAuto = true;}
-  if (bbRight.getRawButton(9)) {armState = ArmState.goBackHome; movingAuto = true;}
-  if (bbRight.getRawButton(5)) {armState = ArmState.goConeScoreGround; movingAuto = true;}
-  if (bbRight.getRawButton(6)) {armState = ArmState.goConeScoreLow; movingAuto = true;}
 
   /* Enable Inverse Kinematic PID Control of arm */
   if (c_controller.getBackButtonPressed() && Arm.isHomed) {
@@ -168,13 +237,132 @@ public class Robot extends TimedRobot {
     isAuto = !isAuto;
   }
 
+  /* Manual override to say arm is homed */
+  if (c_controller.getStartButtonPressed()) {
+    Arm.isHomed = true;
+  }
+
   /* Command arm to go to different positions */
   switch (armState) {
 
-    case goConePickup:
-      desiredArmPosition = conePickupFront;
+    case goConePickupFrontGround:
+      desiredArmPosition = conePickupFrontGround;
       Arm.armControlState = ArmControlState.newPath;
-      armState = ArmState.conePickup;
+      armState = ArmState.conePickupFrontGround;
+      break;
+
+    case goConePickupBackGround:
+      desiredArmPosition = conePickupBackGround;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.conePickupBackGround;
+      break;
+
+    case goConePickupFrontShelf:
+      desiredArmPosition = conePickupFrontShelf;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.conePickupFrontShelf;
+      break;
+
+    case goConePickupBackShelf:
+      desiredArmPosition = conePickupBackShelf;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.conePickupBackShelf;
+      break;
+
+    case goCubePickupFrontGround:
+      desiredArmPosition = cubePickupFrontGround;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubePickupFrontGround;
+      break;
+
+    case goCubePickupBackGround:
+      desiredArmPosition = cubePickupBackGround;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubePickupBackGround;
+      break;
+
+    case goCubePickupFrontShelf:
+      desiredArmPosition = cubePickupFrontShelf;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubePickupFrontShelf;
+      break;
+
+    case goCubePickupBackShelf:
+      desiredArmPosition = cubePickupBackShelf;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubePickupBackShelf;
+      break;
+
+    case goConeScoreFrontLow:
+      desiredArmPosition = coneScoreFrontLow;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreFrontLow;
+      break;
+
+    case goConeScoreFrontMiddle:
+      desiredArmPosition = coneScoreFrontMiddle;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreFrontMiddle;
+      break;
+
+    case goConeScoreFrontHigh:
+      desiredArmPosition = coneScoreFrontHigh;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreFrontHigh;
+      break;
+
+    case goConeScoreBackLow:
+      desiredArmPosition = coneScoreBackLow;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreBackLow;
+      break;
+
+    case goConeScoreBackMiddle:
+      desiredArmPosition = coneScoreBackMiddle;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreBackMiddle;
+      break;
+
+    case goConeScoreBackHigh:
+      desiredArmPosition = coneScoreBackHigh;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.coneScoreBackHigh;
+      break;
+
+    case goCubeScoreFrontLow:
+      desiredArmPosition = cubeScoreFrontLow;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreFrontLow;
+      break;
+
+    case goCubeScoreFrontMiddle:
+      desiredArmPosition = cubeScoreFrontMiddle;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreFrontMiddle;
+      break;
+
+    case goCubeScoreFrontHigh:
+      desiredArmPosition = cubeScoreFrontHigh;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreFrontHigh;
+      break;
+
+    case goCubeScoreBackLow:
+      desiredArmPosition = cubeScoreBackLow;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreBackLow;
+      break;
+
+    case goCubeScoreBackMiddle:
+      desiredArmPosition = cubeScoreBackMiddle;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreBackMiddle;
+      break;
+
+    case goCubeScoreBackHigh:
+      desiredArmPosition = cubeScoreBackHigh;
+      Arm.armControlState = ArmControlState.newPath;
+      armState = ArmState.cubeScoreBackHigh;
       break;
 
     case goHome:
@@ -189,18 +377,6 @@ public class Robot extends TimedRobot {
       armState = ArmState.frontHome;
       break;
 
-      case goConeScoreGround:
-      desiredArmPosition = coneScoreFront;
-      Arm.armControlState = ArmControlState.newPath;
-      armState = ArmState.coneScoreGround;
-      break;
-
-    case goConeScoreLow:
-      desiredArmPosition = coneScoreBack;
-      Arm.armControlState = ArmControlState.newPath;
-      armState = ArmState.coneScoreLow;
-      break;
-
     case goBackHome:
       desiredArmPosition = homeBack;
       Arm.armControlState = ArmControlState.newPath;
@@ -209,18 +385,19 @@ public class Robot extends TimedRobot {
 
     default:
     break;
-
   }
 
   /* If Inverse Kinematic PID Control is enabled */
   if (isAuto) {
+
+    r_robotDrive.arcadeDrive(c_controller.getLeftY(), 0.75 * c_controller.getRightX());
 
     /*************************************************************************************
       START JOINT 3 MANUAL CONTROL
     *************************************************************************************/
     /* If manual inputs are present */
     if (Math.abs(bbRight.getY()) > 0.5 || Math.abs(bbRight.getX()) > 0.5 || 
-        bbLeft.getRawButton(2) || bbLeft.getRawButton(3)) 
+        c_controller.getPOV() == 90 || c_controller.getPOV() == 270) 
     {
       /* Put the arm into manual mode */
       armState = ArmState.manual;
@@ -228,11 +405,11 @@ public class Robot extends TimedRobot {
     }
 
     /* Rotate Joint 3 towards back of robot */
-    if (bbLeft.getRawButton(2)) {
+    if (c_controller.getPOV() == 90) {
       currentArmPosition.incrementZ(-2);
     }
     /* Rotate Joint 3 towards front of robot */
-    else if (bbLeft.getRawButton(3)) {
+    else if (c_controller.getPOV() == 270) {
       currentArmPosition.incrementZ(2);
     }
 
@@ -275,6 +452,13 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Attempted x", currentArmPosition.x);
     SmartDashboard.putNumber("Attempted y", currentArmPosition.y);
 
+    SmartDashboard.putBoolean("Check 1", (Arm.c <= (Arm.a + Arm.b)));
+    SmartDashboard.putBoolean("Check 2", (Arm.c >= (Arm.b - Arm.a)));
+    SmartDashboard.putBoolean("Check 3", ((Math.toDegrees(Arm.joint1Angle) <= 60) && (Math.toDegrees(Arm.joint1Angle) >= -60)));
+    SmartDashboard.putBoolean("Check 4", ((Math.toDegrees(Arm.joint2Angle) <= 120) && (Math.toDegrees(Arm.joint2Angle) >= -120)));
+    SmartDashboard.putBoolean("Check 5", (currentArmPosition.y <= 70.5));
+    SmartDashboard.putBoolean("Check 6", (currentArmPosition.x <= 63.0 && currentArmPosition.x >= -63.0));
+
     /* If attempted arm position is invalid during manual control */
     if (!arm.isArmPositionValid(currentArmPosition.x, currentArmPosition.y) && armState == ArmState.manual) {
       /* Reset currentArmPosition to last know valid position */
@@ -308,10 +492,7 @@ public class Robot extends TimedRobot {
       /* Put arm in runningPath state */
       Arm.armControlState = ArmControlState.runningPath;
       /* Create a new sequence to move from currentArmPosition to desiredArmPosition */
-      currentSequence = pathPlanner.planPath(currentArmPosition, desiredArmPosition);
-      /* Set currentArmPosition to the first position in the sequence */
-      currentArmPosition = currentSequence.nextPosition();
-
+      currentSequence = pathPlanner.planPath(new ArmPosition(currentArmPosition), new ArmPosition(desiredArmPosition));
     }
     /* If the arm is in the middle of a sequence */ 
     else if (Arm.armControlState == ArmControlState.runningPath) {
@@ -337,11 +518,13 @@ public class Robot extends TimedRobot {
   /* Inverse Kinematic PID Control is disabled */
   else {
 
+    r_robotDrive.arcadeDrive(0, 0);
+
     Arm.joint1Brake.set(Value.kForward);
     Arm.joint2Brake.set(Value.kForward);
     
     arm.setJoint1(deadZone(c_controller.getLeftX()) * 0.1);
-    arm.homeJoint1(c_controller.getAButtonPressed());
+    arm.homeJoint1(c_controller.getYButtonPressed());
     arm.setJoint2(deadZone(c_controller.getRightX()) * 0.075);
 
   }

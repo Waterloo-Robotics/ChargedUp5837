@@ -1,5 +1,46 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Brake 2" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1114" y="207"/>
+		<width>79</width>
+		<height>55</height>
+	</widget>
+	<widget field="Brake 1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="1115" y="150"/>
+		<width>81</width>
+		<height>49</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="460" y="186"/>
+		<property name="Text" value="Joint 3 Desired Angle"/>
+	</static-widget>
+	<widget field="Arm State" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="685" y="293"/>
+	</widget>
+	<widget field="Joint 3 Desired Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="400" y="37"/>
+		<width>214</width>
+		<property name="Upper Limit" value="230.0"/>
+		<property name="Lower Limit" value="-230.0"/>
+		<property name="Tick Interval" value="46.0"/>
+	</widget>
+	<widget field="Desired Pos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="686" y="262"/>
+	</widget>
+	<widget field="Current Pos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="684" y="236"/>
+	</widget>
+	<widget field="Flag" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="717" y="209"/>
+	</widget>
+	<widget field="Desired Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="678" y="181"/>
+		<height>24</height>
+	</widget>
+	<widget field="Current Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="678" y="151"/>
+		<height>27</height>
+	</widget>
 	<widget field="Current Step" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="677" y="120"/>
 		<width>163</width>
@@ -10,15 +51,10 @@
 		<width>169</width>
 		<height>28</height>
 	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Image">
-		<location x="1093" y="238"/>
-		<width>65</width>
-		<property name="Image File" value="C:\Users\Unity4Tech\Pictures\Screenshot 2023-02-25 163201.png"/>
-	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="963" y="271"/>
+		<location x="992" y="66"/>
 		<width>69</width>
-		<height>52</height>
+		<height>49</height>
 		<property name="Text" value="VALID"/>
 	</static-widget>
 	<widget field="Joint 1 Error" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
@@ -40,7 +76,7 @@
 		<property name="Lower Limit" value="-60.0"/>
 	</widget>
 	<widget field="Homed" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="1067" y="57"/>
+		<location x="1219" y="344"/>
 		<width>91</width>
 		<height>58</height>
 	</widget>
@@ -68,16 +104,16 @@
 		<height>20</height>
 	</widget>
 	<widget field="Auto Status" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="1068" y="122"/>
+		<location x="1211" y="274"/>
 		<width>114</width>
 		<height>62</height>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="477" y="359"/>
+		<location x="474" y="359"/>
 		<property name="Text" value="Joint 3 Angle"/>
 	</static-widget>
 	<widget field="Joint 3 Enc" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="399" y="207"/>
+		<location x="398" y="208"/>
 		<width>218</width>
 		<property name="Upper Limit" value="230.0"/>
 		<property name="Lower Limit" value="-230.0"/>
@@ -94,9 +130,9 @@
 		<property name="Lower Limit" value="-120.0"/>
 	</widget>
 	<widget field="Is Valid" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="901" y="182"/>
-		<width>226</width>
-		<height>219</height>
+		<location x="986" y="53"/>
+		<width>115</width>
+		<height>74</height>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="83" y="355"/>
@@ -123,7 +159,7 @@
 		<property name="Text" value="ROBOT CONNECTION STATUS"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
-		<location x="2" y="0"/>
+		<location x="2" y="1"/>
 		<width>1356</width>
 		<height>35</height>
 		<property name="Graphics" value="Rounded"/>
