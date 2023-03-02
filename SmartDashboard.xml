@@ -1,5 +1,23 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Check 1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="867" y="241"/>
+	</widget>
+	<widget field="Check 2" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="866" y="262"/>
+	</widget>
+	<widget field="Check 3" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="865" y="284"/>
+	</widget>
+	<widget field="Check 4" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="867" y="306"/>
+	</widget>
+	<widget field="Check 5" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="865" y="330"/>
+	</widget>
+	<widget field="Check 6" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="869" y="354"/>
+	</widget>
 	<widget field="Brake 2" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="1114" y="207"/>
 		<width>79</width>
@@ -139,10 +157,11 @@
 		<property name="Text" value="Joint 1 Angle"/>
 	</static-widget>
 	<widget field="Joint 1 Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="8" y="203"/>
+		<location x="8" y="199"/>
 		<width>219</width>
-		<property name="Upper Limit" value="70.0"/>
-		<property name="Lower Limit" value="-70.0"/>
+		<property name="Upper Limit" value="0.55"/>
+		<property name="Lower Limit" value="0.25"/>
+		<property name="Tick Interval" value="0.05"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="260" y="182"/>

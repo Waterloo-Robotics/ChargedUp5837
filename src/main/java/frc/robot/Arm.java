@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -8,6 +9,7 @@ import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
@@ -31,6 +33,10 @@ public class Arm {
 
     WPI_TalonSRX joint2EncoderTalon;
     WPI_TalonSRX joint1EncoderTalon;
+
+    DutyCycleEncoder joint1Encoder = new DutyCycleEncoder(2);
+
+    AnalogEncoder joint1AnalogEncoder = new AnalogEncoder(0);
 
     PneumaticsControlModule pmc = new PneumaticsControlModule(1);
     public static DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
@@ -94,14 +100,14 @@ public class Arm {
 
     }
 
-    double joint1kP = 0.0050;
+    double joint1kP = 0.0040;
     double joint1kI = 0.0026;
     double joint1kD = 0.0027;
     PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
 
-    double joint2kP = 0.0055;
-    double joint2kI = 0.0013;
-    double joint2kD = 0.0027;
+    double joint2kP = 0.0050;
+    double joint2kI = 0.0010;
+    double joint2kD = 0.0035;
     PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
 
     double joint3kP = 0.002;
@@ -114,6 +120,12 @@ public class Arm {
         /* Joint 1 and 2 Encoders */
         this.joint1EncoderTalon = joint1EncoderTalon;
         this.joint2EncoderTalon = joint2EncoderTalon;
+
+        joint1Encoder.setDutyCycleRange(0, 1);
+        joint1Encoder.setDistancePerRotation(360);
+        joint1Encoder.setPositionOffset(0.0);
+
+        joint1AnalogEncoder.setDistancePerRotation(360);
         /* Joint 1 Ramp Rate */
         m_Joint1_1.setOpenLoopRampRate(3);
         m_Joint1_2.setOpenLoopRampRate(3);
@@ -410,14 +422,15 @@ public class Arm {
 
     public double joint1CurrentPosition() {
 
-        // return -m_Joint1_1.getEncoder().getPosition() / 64.0 * 360.0;
-        return ((Robot.Joint1Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
+        // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
+        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 223;
 
     }
 
     public double joint2CurrentPosition() {
 
-        return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
+        // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
+        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 268;
 
     }
 

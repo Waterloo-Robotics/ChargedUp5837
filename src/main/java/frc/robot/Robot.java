@@ -44,8 +44,8 @@ public class Robot extends TimedRobot {
   Joystick bbLeft = new Joystick(3);
   private final Timer timer = new Timer();
 
-  public static SensorCollection Joint2Enc = Robot.m_driveRight2.getSensorCollection();
-  public static SensorCollection Joint1Enc = Robot.m_driveLeft2.getSensorCollection();
+  public static SensorCollection Joint1Enc = m_driveLeft2.getSensorCollection();
+  public static SensorCollection Joint2Enc = m_driveRight2.getSensorCollection();
 
   Arm arm = new Arm(m_driveLeft2, m_driveRight2);
 
