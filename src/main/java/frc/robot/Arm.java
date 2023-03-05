@@ -100,20 +100,22 @@ public class Arm {
 
     }
 
-    double joint1kP = 0.0040;
-    double joint1kI = 0.0026;
-    double joint1kD = 0.0027;
-    PIDController joint1PID = new PIDController(joint1kP, joint1kI, joint1kD);
+    double joint1kP_base = 0.001;
+    double joint1P_momentMult = 0.00010;
+    double joint1kI = 0.0007;
+    double joint1kD = 0.07;
+    PIDController joint1PID = new PIDController(joint1kP_base, joint1kI, joint1kD);
 
-    double joint2kP = 0.0050;
-    double joint2kI = 0.0010;
-    double joint2kD = 0.0035;
-    PIDController joint2PID = new PIDController(joint2kP, joint2kI, joint2kD);
+    double joint2kP_base = 0.0050;
+    double joint2P_momentMult = 0.0;
+    double joint2kI = 0.0002;
+    double joint2kD = 0.002;
+    PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
 
     double joint3kP = 0.002;
     double joint3kI = 0;
     double joint3kD = 0;
-    PIDController joint3PID = new PIDController(joint2kP, joint2kI, joint2kD);
+    PIDController joint3PID = new PIDController(joint3kP, joint3kI, joint3kD);
 
     public Arm(WPI_TalonSRX joint1EncoderTalon, WPI_TalonSRX joint2EncoderTalon) {
         
@@ -134,9 +136,9 @@ public class Arm {
         m_Joint3.setOpenLoopRampRate(3);
 
         /* PID Tolerance */
-        joint1PID.setTolerance(5);
-        joint2PID.setTolerance(5);
-        joint3PID.setTolerance(5);
+        joint1PID.setTolerance(3);
+        joint2PID.setTolerance(3);
+        joint3PID.setTolerance(3);
 
     }
 
@@ -222,6 +224,7 @@ public class Arm {
         updateArm(x, y, z);
 
     }
+
     public void updateArm(double x, double y, double z) {
 
         if (isArmPositionValid(x, y)) {
@@ -242,6 +245,10 @@ public class Arm {
             joint2Speed = joint2PID.calculate(joint2CurrentPosition());
 
             dynamicI(joint1PID.getPositionError(), joint2PID.getPositionError());
+            dynamicP(joint1CurrentPosition(), joint1PID.getSetpoint(),  
+                     joint2CurrentPosition(), joint2PID.getSetpoint());
+            
+            
             joint3AutoTest(z);
 
             if (!isJoint1AtPosition()) {
@@ -300,18 +307,18 @@ public class Arm {
 
     public void dynamicI(double joint1Error, double joint2Error) {
 
-        if (Math.abs(joint1Error) < 5) {
+        if (Math.abs(joint1Error) < 3) {
 
             joint1PID.setI(0);
 
 
-        } else if (Math.abs(joint1Error) < 10) {
+        } else if (Math.abs(joint1Error) < 6) {
 
             joint1PID.setI(joint1kI);
 
-        } else if (Math.abs(joint1Error) < 17) {
+        } else if (Math.abs(joint1Error) < 15) {
 
-            joint1PID.setI(joint1kI * 0.45);
+            joint1PID.setI(joint1kI * 0.7);
 
         } else {
 
@@ -338,6 +345,72 @@ public class Arm {
 
         }
 
+    }
+
+    public void dynamicP(double joint1Angle, double joint1SetPoint, double joint2Angle, double joint2SetPoint) {
+
+        double joint1Radians = Math.toRadians(joint1Angle);
+        double joint2Radians = Math.toRadians(joint2Angle);
+
+        boolean joint1CurrentSideFront = joint1Angle > 0;
+        boolean joint1SetPointSideFront = joint1SetPoint > 0;
+
+        boolean joint2CurrentSideFront = joint2Angle > 0;
+        boolean joint2SetPointSideFront = joint2SetPoint > 0;
+
+        /* Arm parameters */
+        double arm1Weight = 15;
+        double arm1Length = 42.0;
+
+        double arm2Weight = 8;
+        double arm2Length = 33.0;
+
+        double clawWeight = 10;
+
+        /* Physics calculations */
+        double arm1XDist = arm1Length * Math.sin(joint1Radians);
+        double arm1Moment = arm1XDist / 2 * arm1Weight;
+
+        double arm2XDist = arm2Length * Math.sin(joint2Radians);
+        double arm2Moment = (arm2XDist / 2) * arm2Weight;
+        double arm2MomentJoint1 = ( (arm2XDist / 2) + arm1XDist) * arm2Weight;
+
+        double clawMoment = arm2XDist * clawWeight;
+        double clawMomentJoint1 = (arm1XDist + arm2XDist) * clawWeight;
+
+        double joint1Moment = (arm1Moment + arm2MomentJoint1 + clawMomentJoint1) / 12;
+        double joint2Moment = (arm2Moment + clawMoment) / 12;
+
+        double joint1Added = 0;
+        double joint2Added = 0;
+
+        SmartDashboard.putNumber("Joint 1 Moment", joint1Moment);
+        SmartDashboard.putNumber("Joint 2 Moment", joint2Moment);
+
+        /* If the arm is not on the same side as the setpoint, or the arm is below the setpoint on the same side */
+        if ((joint1CurrentSideFront != joint1SetPointSideFront) || 
+            ( (joint1CurrentSideFront == joint1SetPointSideFront) && (Math.abs(joint1Angle) > Math.abs(joint1SetPoint)) ) )
+        {
+            joint1Added = Math.abs(joint1Moment) * this.joint1P_momentMult;
+        } else {
+            joint1Added = 0;
+        }
+
+        if ((joint2CurrentSideFront != joint2SetPointSideFront) || 
+            ( (joint2CurrentSideFront == joint2SetPointSideFront) && (Math.abs(joint2Angle) > Math.abs(joint2SetPoint)) ) )
+        {
+            joint2Added = Math.abs(joint2Moment) * this.joint2P_momentMult;
+        } else {
+            joint2Added = 0;
+        }
+
+        joint1PID.setP(joint1kP_base + joint1Added);
+        joint2PID.setP(joint2kP_base + joint2Added);
+
+        SmartDashboard.putNumber("Joint 1 Added P", joint1Added);
+        SmartDashboard.putNumber("Joint 2 Added P", joint2Added);
+
+        
     }
 
     public static double joint3Angle;

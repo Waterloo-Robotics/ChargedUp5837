@@ -74,20 +74,20 @@ public class Robot extends TimedRobot {
   
   /* Cone Scoring Positions */
   ArmPosition coneScoreFrontLow = new ArmPosition(30, 5, 0);
-  ArmPosition coneScoreFrontMiddle = new ArmPosition(35, 30, 0);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 30, 0);
   ArmPosition coneScoreFrontHigh = new ArmPosition(40, 45, 0);
 
   ArmPosition coneScoreBackLow = new ArmPosition(-30, 5, 0);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-35, 30, 0);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 30, 0);
   ArmPosition coneScoreBackHigh = new ArmPosition(-40, 45, 0);
 
   /* Cube Scoring Positions */
   ArmPosition cubeScoreFrontLow = new ArmPosition(30, 5, 90);
-  ArmPosition cubeScoreFrontMiddle = new ArmPosition(35, 30, 90);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(40, 30, 90);
   ArmPosition cubeScoreFrontHigh = new ArmPosition(40, 45, 90);
 
   ArmPosition cubeScoreBackLow = new ArmPosition(-30, 5, -90);
-  ArmPosition cubeScoreBackMiddle = new ArmPosition(-35, 30, -90);
+  ArmPosition cubeScoreBackMiddle = new ArmPosition(-40, 30, -90);
   ArmPosition cubeScoreBackHigh = new ArmPosition(-40, 45, -90);
 
   boolean isAuto = false;
@@ -118,6 +118,7 @@ public class Robot extends TimedRobot {
     // gearbox is constructed, you might have to invert the left side instead.
     mg_leftDrive.setInverted(true);
     Arm.mg_Joint1.setInverted(true);
+
     // Arm.m_Joint1_1.getEncoder().setInverted(true);
   }
 
@@ -233,7 +234,8 @@ public class Robot extends TimedRobot {
 
   /* Enable Inverse Kinematic PID Control of arm */
   if (c_controller.getBackButtonPressed() && Arm.isHomed) {
-    currentArmPosition.setCoordinates(0, 9, 0);
+    // currentArmPosition.setCoordinates(0, 9, 0);
+    currentArmPosition = new ArmPosition(homeBack);
     isAuto = !isAuto;
   }
 
