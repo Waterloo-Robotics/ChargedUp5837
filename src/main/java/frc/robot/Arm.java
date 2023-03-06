@@ -1,7 +1,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -9,7 +8,6 @@ import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
@@ -34,11 +32,7 @@ public class Arm {
     WPI_TalonSRX joint2EncoderTalon;
     WPI_TalonSRX joint1EncoderTalon;
 
-    DutyCycleEncoder joint1Encoder = new DutyCycleEncoder(2);
-
-    AnalogEncoder joint1AnalogEncoder = new AnalogEncoder(0);
-
-    PneumaticsControlModule pmc = new PneumaticsControlModule(1);
+    public static PneumaticsControlModule pmc = new PneumaticsControlModule(1);
     public static DoubleSolenoid joint1Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 0, 1);
     public static DoubleSolenoid joint2Brake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 2, 3);
     public static DoubleSolenoid intake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 4, 5);
@@ -100,21 +94,26 @@ public class Arm {
 
     }
 
-    double joint1kP_base = 0.001;
-    double joint1P_momentMult = 0.00010;
-    double joint1kI = 0.0007;
-    double joint1kD = 0.07;
+    // double joint1kI = 0.0007;
+    // double joint1kD = 0.07;
+    // double joint1kP_base = 0.0045;
+    double joint1kP_base = 0.0;
+    // double joint1_physicsMult = 0.0019;
+    double joint1_physicsMult = 0.0;
+    double joint1kI = 0.0;
+    double joint1kD = 0.0;
     PIDController joint1PID = new PIDController(joint1kP_base, joint1kI, joint1kD);
 
-    double joint2kP_base = 0.0050;
-    double joint2P_momentMult = 0.0;
-    double joint2kI = 0.0002;
-    double joint2kD = 0.002;
+    double joint2kP_base = 0.000;
+    double joint2_physicsMult = 0.0017;
+    double joint2kI = 0.0000;
+    double joint2kD = 0.000;
     PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
 
-    double joint3kP = 0.002;
+    double joint3kP = 0.007;
     double joint3kI = 0;
     double joint3kD = 0;
+
     PIDController joint3PID = new PIDController(joint3kP, joint3kI, joint3kD);
 
     public Arm(WPI_TalonSRX joint1EncoderTalon, WPI_TalonSRX joint2EncoderTalon) {
@@ -123,11 +122,6 @@ public class Arm {
         this.joint1EncoderTalon = joint1EncoderTalon;
         this.joint2EncoderTalon = joint2EncoderTalon;
 
-        joint1Encoder.setDutyCycleRange(0, 1);
-        joint1Encoder.setDistancePerRotation(360);
-        joint1Encoder.setPositionOffset(0.0);
-
-        joint1AnalogEncoder.setDistancePerRotation(360);
         /* Joint 1 Ramp Rate */
         m_Joint1_1.setOpenLoopRampRate(3);
         m_Joint1_2.setOpenLoopRampRate(3);
@@ -136,13 +130,11 @@ public class Arm {
         m_Joint3.setOpenLoopRampRate(3);
 
         /* PID Tolerance */
-        joint1PID.setTolerance(3);
+        joint1PID.setTolerance(2);
         joint2PID.setTolerance(3);
         joint3PID.setTolerance(3);
 
     }
-
-    public static boolean isHomed = false;
 
     int joint1AtPositionPersistence, joint2AtPositionPersistence;
 
@@ -244,15 +236,12 @@ public class Arm {
             joint1Speed = joint1PID.calculate(joint1CurrentPosition());
             joint2Speed = joint2PID.calculate(joint2CurrentPosition());
 
-            dynamicI(joint1PID.getPositionError(), joint2PID.getPositionError());
-            dynamicP(joint1CurrentPosition(), joint1PID.getSetpoint(),  
-                     joint2CurrentPosition(), joint2PID.getSetpoint());
-            
+            // dynamicI(joint1PID.getPositionError(), joint2PID.getPositionError());
+            dynamicPower(joint1CurrentPosition(), joint1Speed, joint2CurrentPosition(), joint2Speed);
             
             joint3AutoTest(z);
 
             if (!isJoint1AtPosition()) {
-                if (isHomed) setJoint1(joint1Speed);
                 joint1Brake.set(DoubleSolenoid.Value.kForward);
                 joint1AtPositionPersistence = 0;
             } else {
@@ -269,7 +258,6 @@ public class Arm {
             }
 
             if (!isJoint2AtPosition()) {
-                if (isHomed) setJoint2(joint2Speed);
                 joint2Brake.set(DoubleSolenoid.Value.kForward);
                 joint2AtPositionPersistence = 0;
             } else {
@@ -347,25 +335,19 @@ public class Arm {
 
     }
 
-    public void dynamicP(double joint1Angle, double joint1SetPoint, double joint2Angle, double joint2SetPoint) {
+    public void dynamicPower(double joint1Angle, double joint1Power, double joint2Angle, double joint2Power) {
 
         double joint1Radians = Math.toRadians(joint1Angle);
         double joint2Radians = Math.toRadians(joint2Angle);
 
-        boolean joint1CurrentSideFront = joint1Angle > 0;
-        boolean joint1SetPointSideFront = joint1SetPoint > 0;
-
-        boolean joint2CurrentSideFront = joint2Angle > 0;
-        boolean joint2SetPointSideFront = joint2SetPoint > 0;
-
         /* Arm parameters */
-        double arm1Weight = 15;
+        double arm1Weight = 8;
         double arm1Length = 42.0;
 
-        double arm2Weight = 8;
+        double arm2Weight = 5;
         double arm2Length = 33.0;
 
-        double clawWeight = 10;
+        double clawWeight = 5.7;
 
         /* Physics calculations */
         double arm1XDist = arm1Length * Math.sin(joint1Radians);
@@ -387,30 +369,31 @@ public class Arm {
         SmartDashboard.putNumber("Joint 1 Moment", joint1Moment);
         SmartDashboard.putNumber("Joint 2 Moment", joint2Moment);
 
-        /* If the arm is not on the same side as the setpoint, or the arm is below the setpoint on the same side */
-        if ((joint1CurrentSideFront != joint1SetPointSideFront) || 
-            ( (joint1CurrentSideFront == joint1SetPointSideFront) && (Math.abs(joint1Angle) > Math.abs(joint1SetPoint)) ) )
-        {
-            joint1Added = Math.abs(joint1Moment) * this.joint1P_momentMult;
-        } else {
-            joint1Added = 0;
-        }
+        SmartDashboard.putNumber("arm1XDist Dist", arm1XDist);
+        SmartDashboard.putNumber("arm2XDist Dist", arm2XDist);
 
-        if ((joint2CurrentSideFront != joint2SetPointSideFront) || 
-            ( (joint2CurrentSideFront == joint2SetPointSideFront) && (Math.abs(joint2Angle) > Math.abs(joint2SetPoint)) ) )
-        {
-            joint2Added = Math.abs(joint2Moment) * this.joint2P_momentMult;
-        } else {
-            joint2Added = 0;
-        }
-
-        joint1PID.setP(joint1kP_base + joint1Added);
-        joint2PID.setP(joint2kP_base + joint2Added);
-
+        joint1Added = -joint1Moment * this.joint1_physicsMult;
+        joint2Added = joint2Moment * this.joint2_physicsMult;
+        
         SmartDashboard.putNumber("Joint 1 Added P", joint1Added);
         SmartDashboard.putNumber("Joint 2 Added P", joint2Added);
 
-        
+        /* If arm is not in position, set motor power to physics offset + PID request,
+         * otherwise just use the physics offset. The physics offset will be tuned to
+         * just barely stall the motor. */        
+        if (!isJoint1AtPosition()) {
+            setJoint1(joint1Added + joint1Power);
+        } else {
+            setJoint1(joint1Added);
+
+        }
+
+        if (!isJoint2AtPosition()) {
+            setJoint2(joint2Added + joint2Power);
+        } else {
+            setJoint2(joint2Added);
+
+        }
     }
 
     public static double joint3Angle;
@@ -444,8 +427,8 @@ public class Arm {
 
         }
 
-        if (joint1Brake.get() == Value.kReverse)
-        { joint1Speed = 0; }
+        // if (joint1Brake.get() == Value.kReverse)
+        // { joint1Speed = 0; }
 
         mg_Joint1.set(joint1Speed);
     }
@@ -465,9 +448,12 @@ public class Arm {
             joint2Speed = power;
 
         }
-
-        if (joint2Brake.get() == Value.kReverse)
-        { joint2Speed = 0; }
+        
+        /* Software end stop */
+        if (Math.abs(joint1CurrentPosition()) > 55)
+        { 
+            joint2Speed = 0; 
+        }
 
         m_Joint2.set(joint2Speed);
     }
@@ -515,19 +501,19 @@ public class Arm {
 
     public boolean isJoint1AtPosition() {
 
-        return (Math.abs(joint1PID.getPositionError()) < 5);
+        return (Math.abs(joint1PID.getPositionError()) < 3);
 
     }
 
     public boolean isJoint2AtPosition() {
 
-        return (Math.abs(joint2PID.getPositionError()) < 5);
+        return (Math.abs(joint2PID.getPositionError()) < 3);
 
     }
 
     public boolean isJoint3AtPosition() {
 
-        return (Math.abs(joint3PID.getPositionError()) < 5);
+        return (Math.abs(joint3PID.getPositionError()) < 3);
 
     }
 
@@ -535,29 +521,6 @@ public class Arm {
 
         return isJoint1AtPosition() && isJoint2AtPosition() && isJoint3AtPosition();
 
-    }
-
-    public static boolean isHomeActive = false;
-
-    public void homeJoint1(boolean button) {
-
-        if (button) isHomeActive = true;
-
-        if (isHomeActive) setJoint1(0.05);
-        joint2PID.setSetpoint(0);
-        joint2Speed = joint2PID.calculate(joint2CurrentPosition());
-        setJoint2(joint2Speed);
-
-        if (m_Joint1_1.getEncoder().getVelocity() < -0.01 && !ls_joint1PosLimit.get()) {
-        
-            m_Joint1_1.getEncoder().setPosition(24.59508514404297 / -2.0);
-            isHomeActive = false;
-            isHomed = true;
-
-        }
-
-        // System.out.println("Velocity: " + m_Joint1_1.getEncoder().getVelocity());
-        
     }
 
     public void updateIntake(IntakeState intakeState) {

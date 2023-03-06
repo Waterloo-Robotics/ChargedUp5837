@@ -8,7 +8,9 @@ import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
@@ -28,6 +30,8 @@ import frc.robot.Arm.IntakeState;
  * directory.
  */
 public class Robot extends TimedRobot {
+
+  PowerDistribution pdp = new PowerDistribution(0, ModuleType.kCTRE);
 
   /* Drive Base Motor Controllers */
   WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
@@ -135,6 +139,10 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("Brake 1", Arm.joint1Brake.get() == Value.kReverse);
     SmartDashboard.putBoolean("Brake 2", Arm.joint2Brake.get() == Value.kReverse);
     
+    SmartDashboard.putBoolean("Compressor", Arm.pmc.getCompressor());
+    SmartDashboard.putNumber("NEO J1 1 (A)", pdp.getCurrent(1));
+    SmartDashboard.putNumber("NEO J1 2 (A)", pdp.getCurrent(2));
+    SmartDashboard.putNumber("NEO J2 (A)", pdp.getCurrent(3));
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -154,9 +162,10 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
 
-    Arm.isHomed = false;
     isAuto = false;
     currentArmPosition.setCoordinates(0, 9, 0);
+    arm.joint1PID.reset();
+    arm.joint2PID.reset();
 
   }
   /** This function is called periodically during teleoperated mode. */
@@ -233,15 +242,10 @@ public class Robot extends TimedRobot {
   arm.updateIntake(intakeState);
 
   /* Enable Inverse Kinematic PID Control of arm */
-  if (c_controller.getBackButtonPressed() && Arm.isHomed) {
+  if (c_controller.getBackButtonPressed()) {
     // currentArmPosition.setCoordinates(0, 9, 0);
-    currentArmPosition = new ArmPosition(homeBack);
+    currentArmPosition = new ArmPosition(coneScoreBackMiddle);
     isAuto = !isAuto;
-  }
-
-  /* Manual override to say arm is homed */
-  if (c_controller.getStartButtonPressed()) {
-    Arm.isHomed = true;
   }
 
   /* Command arm to go to different positions */
@@ -526,7 +530,6 @@ public class Robot extends TimedRobot {
     Arm.joint2Brake.set(Value.kForward);
     
     arm.setJoint1(deadZone(c_controller.getLeftX()) * 0.1);
-    arm.homeJoint1(c_controller.getYButtonPressed());
     arm.setJoint2(deadZone(c_controller.getRightX()) * 0.075);
 
   }
@@ -534,7 +537,6 @@ public class Robot extends TimedRobot {
   SmartDashboard.putBoolean("Is joint 1 at position", arm.isJoint1AtPosition());
   SmartDashboard.putBoolean("Is joint 2 at position", arm.isJoint2AtPosition());
   SmartDashboard.putBoolean("Auto Status", isAuto);
-  SmartDashboard.putBoolean("Homed", arm.isHomed);
     
   }
 
