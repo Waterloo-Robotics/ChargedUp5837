@@ -94,18 +94,14 @@ public class Arm {
 
     }
 
-    // double joint1kI = 0.0007;
-    // double joint1kD = 0.07;
-    // double joint1kP_base = 0.0045;
-    double joint1kP_base = 0.0;
-    // double joint1_physicsMult = 0.0019;
-    double joint1_physicsMult = 0.0;
+    double joint1kP_base = 0.0045;
+    double joint1_physicsMult = 0.0019;
     double joint1kI = 0.0;
     double joint1kD = 0.0;
     PIDController joint1PID = new PIDController(joint1kP_base, joint1kI, joint1kD);
 
-    double joint2kP_base = 0.000;
-    double joint2_physicsMult = 0.0017;
+    double joint2kP_base = 0.0065;
+    double joint2_physicsMult = 0.002;
     double joint2kI = 0.0000;
     double joint2kD = 0.000;
     PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
@@ -344,7 +340,7 @@ public class Arm {
         double arm1Weight = 8;
         double arm1Length = 42.0;
 
-        double arm2Weight = 5;
+        double arm2Weight = 4;
         double arm2Length = 33.0;
 
         double clawWeight = 5.7;
@@ -360,7 +356,7 @@ public class Arm {
         double clawMoment = arm2XDist * clawWeight;
         double clawMomentJoint1 = (arm1XDist + arm2XDist) * clawWeight;
 
-        double joint1Moment = (arm1Moment + arm2MomentJoint1 + clawMomentJoint1) / 12;
+        double joint1Moment = (arm1Moment + (arm2MomentJoint1 + clawMomentJoint1) * 0.8) / 12;
         double joint2Moment = (arm2Moment + clawMoment) / 12;
 
         double joint1Added = 0;
@@ -449,11 +445,11 @@ public class Arm {
 
         }
         
-        /* Software end stop */
-        if (Math.abs(joint1CurrentPosition()) > 55)
-        { 
-            joint2Speed = 0; 
-        }
+        /* Prevent joint movement while the arm is down */
+        // if (Math.abs(joint1CurrentPosition()) > 55)
+        // { 
+        //     joint2Speed = 0; 
+        // }
 
         m_Joint2.set(joint2Speed);
     }
