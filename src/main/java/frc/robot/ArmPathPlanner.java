@@ -20,7 +20,6 @@ public class ArmPathPlanner {
 
     /* Plan a path from currentArmPosition to desiredArmPosition */
     public ArmSequence planPath(ArmPosition currentArmPosition, ArmPosition desiredArmPosition) {
-        int flag = -1;
 
         /* Create a new ArmSequence */
         ArmSequence path = new ArmSequence();
@@ -34,75 +33,61 @@ public class ArmPathPlanner {
         SmartDashboard.putNumber("Desired Pos", desiredArmPosition.x);
 
         /* Add current position as first stop */
-        path.addPosition(currentArmPosition);
+        path.addPosition(new ArmPosition(currentArmPosition));
 
         /* If currently in Front */
         if (currentSide == 1) {
             if (desiredSide == 1) {
-                path.addPosition(desiredArmPosition);
-                flag = 1;
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == 0) {
-                path.addPosition(homeFront);
-                path.addPosition(desiredArmPosition);
-                flag = 2;
+                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == -1) {
-                path.addPosition(homeFront);
-                path.addPosition(homeBack);
-                path.addPosition(desiredArmPosition);
-                flag = 3;
+                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else {
-                path.addPosition(currentArmPosition);
-                flag = 4;
+                path.addPosition(new ArmPosition(currentArmPosition));
             }
         } 
         /* If currently within frame perimeter */
         else if (currentSide == 0) {
             if (desiredSide == 1) {
-                path.addPosition(homeFront);
-                path.addPosition(desiredArmPosition);
-                flag = 5;
+                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == 0) {
-                path.addPosition(desiredArmPosition);
-                flag = 6;
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == -1) {
-                path.addPosition(homeBack);
-                path.addPosition(desiredArmPosition);
-                flag = 7;
+                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             } 
             else {
-                path.addPosition(currentArmPosition);
-                flag = 8;
+                path.addPosition(new ArmPosition(currentArmPosition));
             }
         } 
         /* If currently in Back */
         else if (currentSide == -1) {
             if (desiredSide == 1) {
-                path.addPosition(homeBack);
-                path.addPosition(homeFront);
-                path.addPosition(desiredArmPosition);
-                flag = 9;
+                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == 0) {
-                path.addPosition(homeBack);
-                path.addPosition(desiredArmPosition);
-                flag = 10;
+                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == -1) {
-                path.addPosition(desiredArmPosition);
-                flag = 11;
+                path.addPosition(new ArmPosition(desiredArmPosition));
             } 
             else {
-                path.addPosition(currentArmPosition);
-                flag = 12;
+                path.addPosition(new ArmPosition(currentArmPosition));
             }
         }
-
-        SmartDashboard.putNumber("Flag", flag);
 
         return path;
 

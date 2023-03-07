@@ -52,6 +52,15 @@ public class Robot extends TimedRobot {
   public static SensorCollection Joint2Enc = m_driveRight2.getSensorCollection();
 
   Arm arm = new Arm(m_driveLeft2, m_driveRight2);
+  int joint1Timeout;
+  int joint1TimeoutLimit = 100;
+  boolean joint1TimeoutEnable = true;
+  int joint2Timeout;
+  int joint2TimeoutLimit = 100;
+  boolean joint2TimeoutEnable = true;
+
+  boolean timeoutOverride = false;
+
 
   public Arm.ArmState armState = Arm.ArmState.home;
   public Arm.IntakeState intakeState = IntakeState.cubeOpen;
@@ -59,36 +68,36 @@ public class Robot extends TimedRobot {
 
   boolean coneControl = true;
 
-  ArmPosition home = new ArmPosition(0, 9, 0);
+  ArmPosition home = new ArmPosition(10, 18, 0);
   ArmPosition homeFront = new ArmPosition(16, 9, 0);
   ArmPosition homeBack = new ArmPosition(-16, 9, 0);
 
   /* Pickup Positions */
-  ArmPosition conePickupFrontGround = new ArmPosition(30, 5, 0);
-  ArmPosition conePickupBackGround = new ArmPosition(-30, 5, 0);
+  ArmPosition conePickupFrontGround = new ArmPosition(34, 7, 223);
+  ArmPosition conePickupBackGround = new ArmPosition(-34, 7, -223);
 
   ArmPosition conePickupFrontShelf = new ArmPosition(30, 5, 0);
   ArmPosition conePickupBackShelf = new ArmPosition(-30, 5, 0);
 
-  ArmPosition cubePickupFrontGround = new ArmPosition(30, 5, 145);
-  ArmPosition cubePickupBackGround = new ArmPosition(-30, 5, -145);
+  ArmPosition cubePickupFrontGround = new ArmPosition(34, 7, 223);
+  ArmPosition cubePickupBackGround = new ArmPosition(-34, 7, -223);
 
   ArmPosition cubePickupFrontShelf = new ArmPosition(30, 5, 0);
   ArmPosition cubePickupBackShelf = new ArmPosition(-30, 5, 0);
   
   /* Cone Scoring Positions */
-  ArmPosition coneScoreFrontLow = new ArmPosition(34, 7, -223);
-  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 48, 105);
-  ArmPosition coneScoreFrontHigh = new ArmPosition(48, 51, 164);
+  ArmPosition coneScoreFrontLow = new ArmPosition(34, 7, 223);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 48, 193);
+  ArmPosition coneScoreFrontHigh = new ArmPosition(48, 51, 223);
 
   ArmPosition coneScoreBackLow = new ArmPosition(-34, 7, -223);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 48, 105);
-  ArmPosition coneScoreBackHigh = new ArmPosition(-48, 51, 164);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 48, -193);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-48, 51, -223);
 
   /* Cube Scoring Positions */
-  ArmPosition cubeScoreFrontLow = new ArmPosition(34, 7, -223);
-  ArmPosition cubeScoreFrontMiddle = new ArmPosition(33, 28, -193);
-  ArmPosition cubeScoreFrontHigh = new ArmPosition(47, 39.5, -223);
+  ArmPosition cubeScoreFrontLow = new ArmPosition(34, 7, 223);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(33, 28, 193);
+  ArmPosition cubeScoreFrontHigh = new ArmPosition(47, 39.5, 223);
 
   ArmPosition cubeScoreBackLow = new ArmPosition(-34, 7, -223);
   ArmPosition cubeScoreBackMiddle = new ArmPosition(-33, 28, -193);
@@ -123,6 +132,11 @@ public class Robot extends TimedRobot {
     mg_leftDrive.setInverted(true);
     Arm.mg_Joint1.setInverted(true);
 
+    m_driveLeft1.configOpenloopRamp(0.25);
+    m_driveLeft2.configOpenloopRamp(0.25);
+    m_driveRight1.configOpenloopRamp(0.25);
+    m_driveRight2.configOpenloopRamp(0.25);
+
     // Arm.m_Joint1_1.getEncoder().setInverted(true);
   }
 
@@ -143,6 +157,15 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO J1 1 (A)", pdp.getCurrent(1));
     SmartDashboard.putNumber("NEO J1 2 (A)", pdp.getCurrent(2));
     SmartDashboard.putNumber("NEO J2 (A)", pdp.getCurrent(3));
+
+    SmartDashboard.putString("Arm Ctrl State", String.valueOf(arm.armControlState));
+    SmartDashboard.putBoolean("Arm in Pos", arm.isArmInPosition());
+    SmartDashboard.putBoolean("Sequence Finished", currentSequence.sequenceFinished());
+
+    SmartDashboard.putBoolean("J1 Timeout En", joint1TimeoutEnable);
+    SmartDashboard.putNumber("J1 Timeout", joint1Timeout);
+    SmartDashboard.putBoolean("J2 Timeout En", joint2TimeoutEnable);
+    SmartDashboard.putNumber("J2 Timeout", joint2Timeout);
 
     arm.getArmCoordinates(arm.joint1CurrentPosition(), arm.joint2CurrentPosition());
   }
@@ -246,7 +269,8 @@ public class Robot extends TimedRobot {
   /* Enable Inverse Kinematic PID Control of arm */
   if (c_controller.getBackButtonPressed()) {
     // currentArmPosition.setCoordinates(0, 9, 0);
-    currentArmPosition = new ArmPosition(coneScoreBackLow);
+    currentArmPosition = new ArmPosition(home);
+    armState = ArmState.home;
     isAuto = !isAuto;
   }
 
@@ -447,12 +471,14 @@ public class Robot extends TimedRobot {
     currentArmPosition.incrementX(deadZone(bbRight.getX()) * 0.25);
     currentArmPosition.incrementY(deadZone(bbRight.getY()) * -0.25);
 
-    /* If current position is within frame perimeter */
-    if (currentArmPosition.returnSide() == 0) {
-      /* Force Y to be at 9 in to avoid eratic movement*/
-      currentArmPosition.y = 9;
-      // TODO: Remove setting Joint 3 to 0 once Arm Path Planning is working
-      currentArmPosition.z = 0;
+    if (armState == ArmState.manual) {
+      /* If current position is within frame perimeter */
+      if (currentArmPosition.returnSide() == 0) {
+        /* Force Y to be at 9 in to avoid eratic movement*/
+        currentArmPosition.y = 9;
+        // TODO: Remove setting Joint 3 to 0 once Arm Path Planning is working
+        currentArmPosition.z = 0;
+      }
     }
     
     /* Update SmartDashboard with attempted X & Y */
@@ -501,18 +527,48 @@ public class Robot extends TimedRobot {
       Arm.armControlState = ArmControlState.runningPath;
       /* Create a new sequence to move from currentArmPosition to desiredArmPosition */
       currentSequence = pathPlanner.planPath(new ArmPosition(currentArmPosition), new ArmPosition(desiredArmPosition));
+
+      joint1TimeoutEnable = true;
+      joint2TimeoutEnable = true;
+      timeoutOverride = false;
     }
+
     /* If the arm is in the middle of a sequence */ 
     else if (Arm.armControlState == ArmControlState.runningPath) {
-      /* If the arm is in position and the sequence is not finished */
-      if (arm.isArmInPosition() && !currentSequence.sequenceFinished()) {
+
+      /* Next position and path finished */
+      if ( (arm.isArmInPosition() || timeoutOverride) && !currentSequence.sequenceFinished()) {
+        timeoutOverride = false;
         /* set currentArmPosition to next position in the sequence */
         currentArmPosition = currentSequence.nextPosition();
+        joint1TimeoutEnable = true;
+        joint2TimeoutEnable = true;
       } 
       /* If the arm is in position and the sequence is finished */
       else if (arm.isArmInPosition() && currentSequence.sequenceFinished()) {
         /* Put the arm in a completed path state */
         Arm.armControlState = ArmControlState.completedPath;
+      }
+
+      /* Arm position timeouts */
+      if (!arm.isJoint1AtPosition() && joint1TimeoutEnable && joint1Timeout <= joint1TimeoutLimit) {
+        joint1Timeout++;
+      } 
+
+      if (!arm.isJoint2AtPosition() && joint2TimeoutEnable && joint2Timeout <= joint2TimeoutLimit) {
+        joint2Timeout++;
+      } 
+
+      /* Service timeouts */
+      if ( (joint1Timeout > joint1TimeoutLimit || arm.isJoint1AtPosition()) && 
+           (joint2Timeout > joint2TimeoutLimit || arm.isJoint2AtPosition()) ) {
+        timeoutOverride = true;
+        
+        /* Reset timeouts */
+        joint1Timeout = 0;
+        joint1TimeoutEnable = false;
+        joint2Timeout = 0;
+        joint2TimeoutEnable = false;
       }
     }
     

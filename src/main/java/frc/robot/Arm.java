@@ -96,8 +96,8 @@ public class Arm {
 
     double joint1kP_base = 0.0045;
     double joint1_physicsMult = 0.0019;
-    double arm2Influence = 0.55;
-    double joint1kI = 0.0;
+    double arm2Influence = 0.54;
+    double joint1kI = 0.000;
     double joint1kD = 0.0;
     PIDController joint1PID = new PIDController(joint1kP_base, joint1kI, joint1kD);
 
@@ -107,9 +107,11 @@ public class Arm {
     double joint2kD = 0.000;
     PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
 
+
     double joint3kP = 0.004;
     double joint3kI = 0;
-    double joint3kD = 0;
+    double joint3kD = 0.001;
+
 
     PIDController joint3PID = new PIDController(joint3kP, joint3kI, joint3kD);
 
@@ -184,7 +186,9 @@ public class Arm {
 
     }
 
-    public static void getArmCoordinates(double joint1Angle, double joint2Angle) {
+    public static double[] getArmCoordinates(double joint1Angle, double joint2Angle) {
+
+        double armCoordinates[] = new double[2];
 
         double x, y = 0;
 
@@ -199,6 +203,9 @@ public class Arm {
 
         x = x1 + x2;
         y = y1 + y2;
+
+        armCoordinates[0] = x;
+        armCoordinates[1] = y;
         // System.out.println("x1: " + x1);
         // System.out.println("y1: " + y1);
         // System.out.println("x2: " + x2);
@@ -211,6 +218,8 @@ public class Arm {
 
        SmartDashboard.putNumber("Current x", x);
        SmartDashboard.putNumber("Current y", y);
+
+       return armCoordinates;
 
     }
 
@@ -299,7 +308,7 @@ public class Arm {
 
             }
         
-        } else {}
+        }
 
         SmartDashboard.putNumber("x", x);
         SmartDashboard.putNumber("y", y);
@@ -324,14 +333,14 @@ public class Arm {
 
         if (Math.abs(joint1Error) < 3) {
 
-            joint1PID.setI(0);
+            // joint1PID.setI(0);
 
 
-        } else if (Math.abs(joint1Error) < 6) {
+        } else if (Math.abs(joint1Error) < 4) {
 
             joint1PID.setI(joint1kI);
 
-        } else if (Math.abs(joint1Error) < 15) {
+        } else if (Math.abs(joint1Error) < 6) {
 
             joint1PID.setI(joint1kI * 0.7);
 
@@ -341,24 +350,24 @@ public class Arm {
 
         }
 
-        if (Math.abs(joint2Error) < 5) {
+        // if (Math.abs(joint2Error) < 5) {
 
-            joint2PID.setI(0);
+        //     joint2PID.setI(0);
 
-        } else if (Math.abs(joint2Error) < 15) {
+        // } else if (Math.abs(joint2Error) < 15) {
 
-            joint2PID.setI(joint2kI);
+        //     joint2PID.setI(joint2kI);
 
-        } else if (Math.abs(joint2Error) < 20) {
+        // } else if (Math.abs(joint2Error) < 20) {
 
-            // joint2PID.setI(joint2kI * 0.4);
-            joint2PID.setI(0);
+        //     // joint2PID.setI(joint2kI * 0.4);
+        //     joint2PID.setI(0);
 
-        } else {
+        // } else {
 
-            joint2PID.setI(0);
+        //     joint2PID.setI(0);
 
-        }
+        // }
 
     }
 
@@ -540,7 +549,7 @@ public class Arm {
 
     public boolean isJoint3AtPosition() {
 
-        return (Math.abs(joint3PID.getPositionError()) < 3);
+        return (Math.abs(joint3PID.getPositionError()) < 5);
 
     }
 

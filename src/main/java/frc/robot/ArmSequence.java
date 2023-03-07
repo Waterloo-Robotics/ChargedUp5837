@@ -65,6 +65,10 @@ public class ArmSequence {
 
   }
 
+  public int getNextIndex() {
+    return this.currentIndex;
+  }
+
   /* Check if all positions have been requested */
   public boolean sequenceFinished() {
 
