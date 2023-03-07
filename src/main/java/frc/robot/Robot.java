@@ -77,22 +77,22 @@ public class Robot extends TimedRobot {
   ArmPosition cubePickupBackShelf = new ArmPosition(-30, 5, 0);
   
   /* Cone Scoring Positions */
-  ArmPosition coneScoreFrontLow = new ArmPosition(30, 5, 0);
-  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 30, 0);
-  ArmPosition coneScoreFrontHigh = new ArmPosition(40, 45, 0);
+  ArmPosition coneScoreFrontLow = new ArmPosition(34, 7, -223);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 48, 105);
+  ArmPosition coneScoreFrontHigh = new ArmPosition(48, 51, 164);
 
-  ArmPosition coneScoreBackLow = new ArmPosition(-30, 5, 0);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 30, 0);
-  ArmPosition coneScoreBackHigh = new ArmPosition(-40, 45, 0);
+  ArmPosition coneScoreBackLow = new ArmPosition(-34, 7, -223);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 48, 105);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-48, 51, 164);
 
   /* Cube Scoring Positions */
-  ArmPosition cubeScoreFrontLow = new ArmPosition(30, 5, 90);
-  ArmPosition cubeScoreFrontMiddle = new ArmPosition(40, 30, 90);
-  ArmPosition cubeScoreFrontHigh = new ArmPosition(40, 45, 90);
+  ArmPosition cubeScoreFrontLow = new ArmPosition(34, 7, -223);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(33, 28, -193);
+  ArmPosition cubeScoreFrontHigh = new ArmPosition(47, 39.5, -223);
 
-  ArmPosition cubeScoreBackLow = new ArmPosition(-30, 5, -90);
-  ArmPosition cubeScoreBackMiddle = new ArmPosition(-40, 30, -90);
-  ArmPosition cubeScoreBackHigh = new ArmPosition(-40, 45, -90);
+  ArmPosition cubeScoreBackLow = new ArmPosition(-34, 7, -223);
+  ArmPosition cubeScoreBackMiddle = new ArmPosition(-33, 28, -193);
+  ArmPosition cubeScoreBackHigh = new ArmPosition(-47, 39.5, -223);
 
   boolean isAuto = false;
   boolean movingAuto = false;
@@ -143,6 +143,8 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO J1 1 (A)", pdp.getCurrent(1));
     SmartDashboard.putNumber("NEO J1 2 (A)", pdp.getCurrent(2));
     SmartDashboard.putNumber("NEO J2 (A)", pdp.getCurrent(3));
+
+    arm.getArmCoordinates(arm.joint1CurrentPosition(), arm.joint2CurrentPosition());
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -244,7 +246,7 @@ public class Robot extends TimedRobot {
   /* Enable Inverse Kinematic PID Control of arm */
   if (c_controller.getBackButtonPressed()) {
     // currentArmPosition.setCoordinates(0, 9, 0);
-    currentArmPosition = new ArmPosition(coneScoreBackMiddle);
+    currentArmPosition = new ArmPosition(coneScoreBackLow);
     isAuto = !isAuto;
   }
 
@@ -461,7 +463,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("Check 1", (Arm.c <= (Arm.a + Arm.b)));
     SmartDashboard.putBoolean("Check 2", (Arm.c >= (Arm.b - Arm.a)));
     SmartDashboard.putBoolean("Check 3", ((Math.toDegrees(Arm.joint1Angle) <= 60) && (Math.toDegrees(Arm.joint1Angle) >= -60)));
-    SmartDashboard.putBoolean("Check 4", ((Math.toDegrees(Arm.joint2Angle) <= 120) && (Math.toDegrees(Arm.joint2Angle) >= -120)));
+    SmartDashboard.putBoolean("Check 4", ((Math.toDegrees(Arm.joint2Angle) <= 150) && (Math.toDegrees(Arm.joint2Angle) >= -150)));
     SmartDashboard.putBoolean("Check 5", (currentArmPosition.y <= 70.5));
     SmartDashboard.putBoolean("Check 6", (currentArmPosition.x <= 63.0 && currentArmPosition.x >= -63.0));
 

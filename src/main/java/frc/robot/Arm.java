@@ -96,6 +96,7 @@ public class Arm {
 
     double joint1kP_base = 0.0045;
     double joint1_physicsMult = 0.0019;
+    double arm2Influence = 0.55;
     double joint1kI = 0.0;
     double joint1kD = 0.0;
     PIDController joint1PID = new PIDController(joint1kP_base, joint1kI, joint1kD);
@@ -106,7 +107,7 @@ public class Arm {
     double joint2kD = 0.000;
     PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
 
-    double joint3kP = 0.007;
+    double joint3kP = 0.004;
     double joint3kI = 0;
     double joint3kD = 0;
 
@@ -183,6 +184,36 @@ public class Arm {
 
     }
 
+    public static void getArmCoordinates(double joint1Angle, double joint2Angle) {
+
+        double x, y = 0;
+
+        double x1, y1 = 0;
+        double x2, y2 = 0;
+
+        x1 = Math.sin(Math.toRadians(joint1Angle)) * b;
+        y1 = Math.cos(Math.toRadians(joint1Angle)) * b;
+
+        x2 = Math.sin(Math.toRadians(joint2Angle)) * a;
+        y2 = -Math.cos(Math.toRadians(joint2Angle)) * a;
+
+        x = x1 + x2;
+        y = y1 + y2;
+        // System.out.println("x1: " + x1);
+        // System.out.println("y1: " + y1);
+        // System.out.println("x2: " + x2);
+        // System.out.println("y2: " + y2);
+
+
+        //  System.out.println("Current x: " + x);
+
+        //  System.out.println("Current y: " + y);
+
+       SmartDashboard.putNumber("Current x", x);
+       SmartDashboard.putNumber("Current y", y);
+
+    }
+
     public boolean isArmPositionValid(double x, double y) {
 
         setArmCoordinates(x, y);
@@ -191,7 +222,7 @@ public class Arm {
         (c <= (a + b)) && // not longer than physically possible
         (c >= (b - a)) && // not shorter than physically possible
         ((Math.toDegrees(joint1Angle) <= 60) && (Math.toDegrees(joint1Angle) >= -60)) && // joint 1 isn't outside of limits
-        ((Math.toDegrees(joint2Angle) <= 120) && (Math.toDegrees(joint2Angle) >= -120)) && // joint 2 isn't outside of limits
+        ((Math.toDegrees(joint2Angle) <= 150) && (Math.toDegrees(joint2Angle) >= -150)) && // joint 2 isn't outside of limits
         (y <= 70.5) && // doesn't exceed height limit
         (x <= 63.0 && x >= -63.0); // doesn't exceed 48 inches from frame
 
@@ -356,7 +387,7 @@ public class Arm {
         double clawMoment = arm2XDist * clawWeight;
         double clawMomentJoint1 = (arm1XDist + arm2XDist) * clawWeight;
 
-        double joint1Moment = (arm1Moment + (arm2MomentJoint1 + clawMomentJoint1) * 0.8) / 12;
+        double joint1Moment = (arm1Moment + (arm2MomentJoint1 + clawMomentJoint1) * arm2Influence) / 12;
         double joint2Moment = (arm2Moment + clawMoment) / 12;
 
         double joint1Added = 0;
