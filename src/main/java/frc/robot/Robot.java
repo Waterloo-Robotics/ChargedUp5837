@@ -9,6 +9,9 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -44,8 +47,8 @@ public class Robot extends TimedRobot {
   
   private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
   private final XboxController c_controller = new XboxController(1);
-  Joystick bbRight = new Joystick(2);
-  Joystick bbLeft = new Joystick(3);
+  Joystick bbRight = new Joystick(3);
+  Joystick bbLeft = new Joystick(2);
   private final Timer timer = new Timer();
 
   public static SensorCollection Joint1Enc = m_driveLeft2.getSensorCollection();
@@ -53,10 +56,10 @@ public class Robot extends TimedRobot {
 
   Arm arm = new Arm(m_driveLeft2, m_driveRight2);
   int joint1Timeout;
-  int joint1TimeoutLimit = 40;
+  int joint1TimeoutLimit = 30;
   boolean joint1TimeoutEnable = true;
   int joint2Timeout;
-  int joint2TimeoutLimit = 40;
+  int joint2TimeoutLimit = 30;
   boolean joint2TimeoutEnable = true;
 
   boolean timeoutOverride = false;
@@ -66,7 +69,7 @@ public class Robot extends TimedRobot {
   public Arm.IntakeState intakeState = IntakeState.cubeOpen;
   // ADIS16470_IMU imu = new ADIS16470_IMU();
 
-  boolean coneControl = true;
+  boolean coneControl, front = true;
 
   ArmPosition home = new ArmPosition(10, 18, 0);
   ArmPosition homeFront = new ArmPosition(16, 9, 90);
@@ -114,6 +117,9 @@ public class Robot extends TimedRobot {
   ArmPathPlanner pathPlanner = new ArmPathPlanner(homeFront, homeBack);
   /* Global Arm Sequence */
   ArmSequence currentSequence = new ArmSequence();
+
+  NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+  NetworkTableEntry camMode;
   
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -134,6 +140,10 @@ public class Robot extends TimedRobot {
     m_driveRight2.configOpenloopRamp(0.25);
 
     // Arm.m_Joint1_1.getEncoder().setInverted(true);
+
+    camMode = table.getEntry("camMode");
+
+    camMode.setNumber(1);
   }
 
   public void robotPeriodic() {
@@ -215,9 +225,20 @@ public class Robot extends TimedRobot {
     coneControl = false;
   }
 
-  /* Home Buttons */
-  if (bbLeft.getRawButton(7)) armState = ArmState.goFrontHome;
-  if (bbLeft.getRawButton(8)) armState = ArmState.goBackHome;
+  /* Switch between front and back */
+  if (bbRight.getRawButton(9)) {
+    front = false;
+  } else if (bbRight.getRawButton(10)) {
+    front = true;
+  }
+
+  /* Home Control */
+  if (bbRight.getRawButton(8)) {
+    
+    if (front) armState = ArmState.goFrontHome;
+    else armState = ArmState.goBackHome;
+  
+  }
 
 
   /* Scoring Positions */
@@ -231,17 +252,39 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(3)) armState = ArmState.goConePickupBackGround;
-    if (bbRight.getRawButton(6)) armState = ArmState.goConePickupFrontGround;
+    if (bbRight.getRawButton(5)) {
+
+      if (front) armState = ArmState.goConePickupFrontShelf;
+      else armState = ArmState.goConePickupBackShelf;
+
+    }
+
+    if (bbRight.getRawButton(4)) {
+      
+      if (front) armState = ArmState.goConePickupFrontGround;
+      else armState = ArmState.goConePickupBackGround;
+    
+    }
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(1)) armState = ArmState.goConeScoreBackLow;
-    if (bbLeft.getRawButton(2)) armState = ArmState.goConeScoreBackMiddle;
-    if (bbLeft.getRawButton(3)) armState = ArmState.goConeScoreBackHigh;
-
-    if (bbLeft.getRawButton(4)) armState = ArmState.goConeScoreFrontLow;
-    if (bbLeft.getRawButton(5)) armState = ArmState.goConeScoreFrontMiddle;
-    if (bbLeft.getRawButton(6)) armState = ArmState.goConeScoreFrontHigh;
+    if (bbLeft.getRawButton(3)) {
+      
+      if (front) armState = ArmState.goConeScoreFrontHigh;
+      else armState = ArmState.goConeScoreBackHigh;
+    
+    }
+    if (bbLeft.getRawButton(2)) {
+      
+      if (front) armState = ArmState.goConeScoreFrontMiddle;
+      else armState = ArmState.goConeScoreBackMiddle;
+    
+    }
+    if (bbLeft.getRawButton(1)) {
+      
+      if (front) armState = ArmState.goConeScoreFrontLow;
+      else armState = ArmState.goConeScoreBackLow;
+    
+    }
   }
   else {
     /* Claw Control */
@@ -249,17 +292,39 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(3)) armState = ArmState.goCubePickupBackGround;
-    if (bbRight.getRawButton(6)) armState = ArmState.goCubePickupFrontGround;
+    if (bbRight.getRawButton(5)) {
+
+      if (front) armState = ArmState.goCubePickupFrontShelf;
+      else armState = ArmState.goCubePickupBackShelf;
+
+    }
+
+    if (bbRight.getRawButton(4)) {
+      
+      if (front) armState = ArmState.goCubePickupFrontGround;
+      else armState = ArmState.goCubePickupBackGround;
+    
+    }
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(1)) armState = ArmState.goCubeScoreBackLow;
-    if (bbLeft.getRawButton(2)) armState = ArmState.goCubeScoreBackMiddle;
-    if (bbLeft.getRawButton(3)) armState = ArmState.goCubeScoreBackHigh;
-
-    if (bbLeft.getRawButton(4)) armState = ArmState.goCubeScoreFrontLow;
-    if (bbLeft.getRawButton(5)) armState = ArmState.goCubeScoreFrontMiddle;
-    if (bbLeft.getRawButton(6)) armState = ArmState.goCubeScoreFrontHigh;
+    if (bbLeft.getRawButton(3)) {
+      
+      if (front) armState = ArmState.goCubeScoreFrontHigh;
+      else armState = ArmState.goCubeScoreBackHigh;
+    
+    }
+    if (bbLeft.getRawButton(2)) {
+      
+      if (front) armState = ArmState.goCubeScoreFrontMiddle;
+      else armState = ArmState.goCubeScoreBackMiddle;
+    
+    }
+    if (bbLeft.getRawButton(1)) {
+      
+      if (front) armState = ArmState.goCubeScoreFrontLow;
+      else armState = ArmState.goCubeScoreBackLow;
+    
+    }
   }
 
   /* Set Claw state */
@@ -436,11 +501,11 @@ public class Robot extends TimedRobot {
     }
 
     /* Rotate Joint 3 towards back of robot */
-    if (c_controller.getPOV() == 90) {
+    if (c_controller.getPOV() == 90 || c_controller.getPOV() == 135 || c_controller.getPOV() == 45) {
       currentArmPosition.incrementZ(-3);
     }
     /* Rotate Joint 3 towards front of robot */
-    else if (c_controller.getPOV() == 270) {
+    else if (c_controller.getPOV() == 270 || c_controller.getPOV() == 315 || c_controller.getPOV() == 225) {
       currentArmPosition.incrementZ(3);
     }
 
