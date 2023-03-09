@@ -53,10 +53,10 @@ public class Robot extends TimedRobot {
 
   Arm arm = new Arm(m_driveLeft2, m_driveRight2);
   int joint1Timeout;
-  int joint1TimeoutLimit = 100;
+  int joint1TimeoutLimit = 40;
   boolean joint1TimeoutEnable = true;
   int joint2Timeout;
-  int joint2TimeoutLimit = 100;
+  int joint2TimeoutLimit = 40;
   boolean joint2TimeoutEnable = true;
 
   boolean timeoutOverride = false;
@@ -69,39 +69,39 @@ public class Robot extends TimedRobot {
   boolean coneControl = true;
 
   ArmPosition home = new ArmPosition(10, 18, 0);
-  ArmPosition homeFront = new ArmPosition(16, 9, 0);
-  ArmPosition homeBack = new ArmPosition(-16, 9, 0);
+  ArmPosition homeFront = new ArmPosition(16, 9, 90);
+  ArmPosition homeBack = new ArmPosition(-16, 9, 90);
 
   /* Pickup Positions */
-  ArmPosition conePickupFrontGround = new ArmPosition(34, 7, 223);
-  ArmPosition conePickupBackGround = new ArmPosition(-34, 7, -223);
+  ArmPosition conePickupFrontGround = new ArmPosition(22, 0, 195);
+  ArmPosition conePickupBackGround = new ArmPosition(-21, 0, 11);
 
-  ArmPosition conePickupFrontShelf = new ArmPosition(30, 5, 0);
-  ArmPosition conePickupBackShelf = new ArmPosition(-30, 5, 0);
+  ArmPosition conePickupFrontShelf = new ArmPosition(27, 35, -121);
+  ArmPosition conePickupBackShelf = new ArmPosition(-27, 34, -78);
 
-  ArmPosition cubePickupFrontGround = new ArmPosition(34, 7, 223);
-  ArmPosition cubePickupBackGround = new ArmPosition(-34, 7, -223);
+  ArmPosition cubePickupFrontGround = new ArmPosition(22, 0, 195);
+  ArmPosition cubePickupBackGround = new ArmPosition(-21, 0, 11);
 
-  ArmPosition cubePickupFrontShelf = new ArmPosition(30, 5, 0);
-  ArmPosition cubePickupBackShelf = new ArmPosition(-30, 5, 0);
+  ArmPosition cubePickupFrontShelf = new ArmPosition(27, 35, -121);
+  ArmPosition cubePickupBackShelf = new ArmPosition(-27, 34, -78);
   
   /* Cone Scoring Positions */
-  ArmPosition coneScoreFrontLow = new ArmPosition(34, 7, 223);
-  ArmPosition coneScoreFrontMiddle = new ArmPosition(40, 48, 193);
-  ArmPosition coneScoreFrontHigh = new ArmPosition(48, 51, 223);
+  ArmPosition coneScoreFrontLow = new ArmPosition(30, 3, 182);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(37, 39, -109);
+  ArmPosition coneScoreFrontHigh = new ArmPosition(46, 50, -100);
 
-  ArmPosition coneScoreBackLow = new ArmPosition(-34, 7, -223);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-40, 48, -193);
-  ArmPosition coneScoreBackHigh = new ArmPosition(-48, 51, -223);
+  ArmPosition coneScoreBackLow = new ArmPosition(-30, 3, 8);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-37, 39, 90);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-46, 50, 90);
 
   /* Cube Scoring Positions */
-  ArmPosition cubeScoreFrontLow = new ArmPosition(34, 7, 223);
-  ArmPosition cubeScoreFrontMiddle = new ArmPosition(33, 28, 193);
-  ArmPosition cubeScoreFrontHigh = new ArmPosition(47, 39.5, 223);
+  ArmPosition cubeScoreFrontLow = new ArmPosition(33, 6, -90);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(36, 29, -74);
+  ArmPosition cubeScoreFrontHigh = new ArmPosition(45, 47, -44);
 
-  ArmPosition cubeScoreBackLow = new ArmPosition(-34, 7, -223);
-  ArmPosition cubeScoreBackMiddle = new ArmPosition(-33, 28, -193);
-  ArmPosition cubeScoreBackHigh = new ArmPosition(-47, 39.5, -223);
+  ArmPosition cubeScoreBackLow = new ArmPosition(-21, -1, 8);
+  ArmPosition cubeScoreBackMiddle = new ArmPosition(-30, 21, -51);
+  ArmPosition cubeScoreBackHigh = new ArmPosition(-48, 35, -90);
 
   boolean isAuto = false;
   boolean movingAuto = false;
@@ -121,10 +121,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    // m_driveLeft1.configOpenloopRamp(1);
-    // m_driveLeft2.configOpenloopRamp(1);
-    // m_driveRight1.configOpenloopRamp(1);
-    // m_driveRight2.configOpenloopRamp(1);
     // imu.calibrate();
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
@@ -227,9 +223,12 @@ public class Robot extends TimedRobot {
   /* Scoring Positions */
   if (coneControl) {
     /* Claw Control */
-    if (c_controller.getXButtonPressed()) intakeState = IntakeState.coneIntakeBack;
-    if (c_controller.getBButtonPressed()) intakeState = IntakeState.coneIntakeForward;
-    if (c_controller.getAButtonPressed()) intakeState = IntakeState.coneClosed;
+    // if (c_controller.getXButtonPressed()) intakeState = IntakeState.coneIntakeBack;
+    // if (c_controller.getBButtonPressed()) intakeState = IntakeState.coneIntakeForward;
+    // if (c_controller.getAButtonPressed()) intakeState = IntakeState.coneClosed;
+
+    if (c_controller.getXButtonPressed() || c_controller.getBButtonPressed()) intakeState = IntakeState.cubeOpen;
+    if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
     if (bbRight.getRawButton(3)) armState = ArmState.goConePickupBackGround;
@@ -438,11 +437,11 @@ public class Robot extends TimedRobot {
 
     /* Rotate Joint 3 towards back of robot */
     if (c_controller.getPOV() == 90) {
-      currentArmPosition.incrementZ(-2);
+      currentArmPosition.incrementZ(-3);
     }
     /* Rotate Joint 3 towards front of robot */
     else if (c_controller.getPOV() == 270) {
-      currentArmPosition.incrementZ(2);
+      currentArmPosition.incrementZ(3);
     }
 
     /* If Joint 3 angle is over 225 degrees reset to 225*/
@@ -477,7 +476,7 @@ public class Robot extends TimedRobot {
         /* Force Y to be at 9 in to avoid eratic movement*/
         currentArmPosition.y = 9;
         // TODO: Remove setting Joint 3 to 0 once Arm Path Planning is working
-        currentArmPosition.z = 0;
+        currentArmPosition.z = 90;
       }
     }
     

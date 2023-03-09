@@ -496,13 +496,13 @@ public class Arm {
 
     public void setJoint3(double power) {
 
-        if (power > 0.7) {
+        if (power > 0.9) {
 
-            joint3Speed = 0.7;
+            joint3Speed = 0.9;
 
-        } else if (power < -0.7) {
+        } else if (power < -0.9) {
 
-            joint3Speed = -0.7;
+            joint3Speed = -0.9;
 
         } else {
 
@@ -564,26 +564,26 @@ public class Arm {
         switch (intakeState) {
 
             case cubeOpen:
-            intake.set(Value.kForward);
+            intake.set(Value.kReverse);
             coneSwitch.set(Value.kForward);
             break;
 
             case coneIntakeForward:
-            intake.set(Value.kReverse);
+            intake.set(Value.kForward);
             coneSwitch.set(Value.kForward);
             break;
 
             case coneIntakeBack:
-            intake.set(Value.kReverse);
+            intake.set(Value.kForward);
             coneSwitch.set(Value.kReverse);
             break;
 
             case cubeClosed:
-            intake.set(Value.kReverse);
+            intake.set(Value.kForward);
             break;
             
             case coneClosed:
-            intake.set(Value.kForward);
+            intake.set(Value.kReverse);
             coneSwitch.set(Value.kForward);
             break;
 
