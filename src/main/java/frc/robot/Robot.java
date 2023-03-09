@@ -225,20 +225,9 @@ public class Robot extends TimedRobot {
     coneControl = false;
   }
 
-  /* Switch between front and back */
-  if (bbRight.getRawButton(9)) {
-    front = false;
-  } else if (bbRight.getRawButton(10)) {
-    front = true;
-  }
-
   /* Home Control */
-  if (bbRight.getRawButton(8)) {
-    
-    if (front) armState = ArmState.goFrontHome;
-    else armState = ArmState.goBackHome;
-  
-  }
+  if (bbRight.getRawButton(6)) armState = ArmState.goFrontHome;
+  if (bbRight.getRawButton(3)) armState = ArmState.goBackHome;
 
 
   /* Scoring Positions */
@@ -252,39 +241,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(5)) {
+    if (bbRight.getRawButton(1)) armState = ArmState.goConePickupBackGround;
+    if (bbRight.getRawButton(4)) armState = ArmState.goConePickupFrontGround;
 
-      if (front) armState = ArmState.goConePickupFrontShelf;
-      else armState = ArmState.goConePickupBackShelf;
-
-    }
-
-    if (bbRight.getRawButton(4)) {
-      
-      if (front) armState = ArmState.goConePickupFrontGround;
-      else armState = ArmState.goConePickupBackGround;
-    
-    }
+    if (bbRight.getRawButton(2)) armState = ArmState.goConePickupBackShelf;
+    if (bbRight.getRawButton(5)) armState = ArmState.goConePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(3)) {
-      
-      if (front) armState = ArmState.goConeScoreFrontHigh;
-      else armState = ArmState.goConeScoreBackHigh;
-    
-    }
-    if (bbLeft.getRawButton(2)) {
-      
-      if (front) armState = ArmState.goConeScoreFrontMiddle;
-      else armState = ArmState.goConeScoreBackMiddle;
-    
-    }
-    if (bbLeft.getRawButton(1)) {
-      
-      if (front) armState = ArmState.goConeScoreFrontLow;
-      else armState = ArmState.goConeScoreBackLow;
-    
-    }
+    if (bbRight.getRawButton(1)) armState = ArmState.goConeScoreBackLow;
+    if (bbRight.getRawButton(2)) armState = ArmState.goConeScoreBackMiddle;
+    if (bbRight.getRawButton(3)) armState = ArmState.goConeScoreBackHigh;
+  
+    if (bbRight.getRawButton(4)) armState = ArmState.goConeScoreFrontLow;
+    if (bbRight.getRawButton(5)) armState = ArmState.goConeScoreFrontMiddle;
+    if (bbRight.getRawButton(6)) armState = ArmState.goConeScoreFrontHigh;
   }
   else {
     /* Claw Control */
@@ -292,39 +262,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(5)) {
-
-      if (front) armState = ArmState.goCubePickupFrontShelf;
-      else armState = ArmState.goCubePickupBackShelf;
-
-    }
-
-    if (bbRight.getRawButton(4)) {
-      
-      if (front) armState = ArmState.goCubePickupFrontGround;
-      else armState = ArmState.goCubePickupBackGround;
+    if (bbRight.getRawButton(1)) armState = ArmState.goCubePickupBackGround;
+    if (bbRight.getRawButton(4)) armState = ArmState.goCubePickupFrontGround;
     
-    }
+    if (bbRight.getRawButton(2)) armState = ArmState.goCubePickupBackShelf;
+    if (bbRight.getRawButton(5)) armState = ArmState.goCubePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(3)) {
-      
-      if (front) armState = ArmState.goCubeScoreFrontHigh;
-      else armState = ArmState.goCubeScoreBackHigh;
-    
-    }
-    if (bbLeft.getRawButton(2)) {
-      
-      if (front) armState = ArmState.goCubeScoreFrontMiddle;
-      else armState = ArmState.goCubeScoreBackMiddle;
-    
-    }
-    if (bbLeft.getRawButton(1)) {
-      
-      if (front) armState = ArmState.goCubeScoreFrontLow;
-      else armState = ArmState.goCubeScoreBackLow;
-    
-    }
+    if (bbRight.getRawButton(1)) armState = ArmState.goCubeScoreBackLow;
+    if (bbRight.getRawButton(2)) armState = ArmState.goCubeScoreBackMiddle;
+    if (bbRight.getRawButton(3)) armState = ArmState.goCubeScoreBackHigh;
+  
+    if (bbRight.getRawButton(4)) armState = ArmState.goCubeScoreFrontLow;
+    if (bbRight.getRawButton(5)) armState = ArmState.goCubeScoreFrontMiddle;
+    if (bbRight.getRawButton(6)) armState = ArmState.goCubeScoreFrontHigh;
   }
 
   /* Set Claw state */
