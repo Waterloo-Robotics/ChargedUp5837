@@ -76,35 +76,35 @@ public class Robot extends TimedRobot {
   ArmPosition homeBack = new ArmPosition(-16, 9, 90);
 
   /* Pickup Positions */
-  ArmPosition conePickupFrontGround = new ArmPosition(22, 0, 195);
-  ArmPosition conePickupBackGround = new ArmPosition(-21, 0, 11);
+  ArmPosition conePickupFrontGround = new ArmPosition(22, 2, 180);
+  ArmPosition conePickupBackGround = new ArmPosition(-24.5, 2, -10);
 
-  ArmPosition conePickupFrontShelf = new ArmPosition(27, 35, -121);
-  ArmPosition conePickupBackShelf = new ArmPosition(-27, 34, -78);
+  ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 34, -121);
+  ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 41.25, -81);
 
-  ArmPosition cubePickupFrontGround = new ArmPosition(22, 0, 195);
-  ArmPosition cubePickupBackGround = new ArmPosition(-21, 0, 11);
+  ArmPosition cubePickupFrontGround = new ArmPosition(22, 2, 180);
+  ArmPosition cubePickupBackGround = new ArmPosition(-24.5, 2, -10);
 
-  ArmPosition cubePickupFrontShelf = new ArmPosition(27, 35, -121);
-  ArmPosition cubePickupBackShelf = new ArmPosition(-27, 34, -78);
+  ArmPosition cubePickupFrontShelf = new ArmPosition(33.5, 34, -121);
+  ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 41.25, -81);
   
   /* Cone Scoring Positions */
-  ArmPosition coneScoreFrontLow = new ArmPosition(30, 3, 182);
-  ArmPosition coneScoreFrontMiddle = new ArmPosition(37, 39, -109);
-  ArmPosition coneScoreFrontHigh = new ArmPosition(46, 50, -100);
+  ArmPosition coneScoreFrontLow = new ArmPosition(30, 1, 225);
+  ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 39.25, -130);
+  ArmPosition coneScoreFrontHigh = new ArmPosition(48.75, 53, -112);
 
-  ArmPosition coneScoreBackLow = new ArmPosition(-30, 3, 8);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-37, 39, 90);
-  ArmPosition coneScoreBackHigh = new ArmPosition(-46, 50, 90);
+  ArmPosition coneScoreBackLow = new ArmPosition(-21, 3, -19);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-38.25, 44, -81);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-50.25, 49.75, -105);
 
   /* Cube Scoring Positions */
-  ArmPosition cubeScoreFrontLow = new ArmPosition(33, 6, -90);
-  ArmPosition cubeScoreFrontMiddle = new ArmPosition(36, 29, -74);
-  ArmPosition cubeScoreFrontHigh = new ArmPosition(45, 47, -44);
+  ArmPosition cubeScoreFrontLow = new ArmPosition(33, 7.5, -90);
+  ArmPosition cubeScoreFrontMiddle = new ArmPosition(42.25, 29, -74);
+  ArmPosition cubeScoreFrontHigh = new ArmPosition(51.75, 45, -44);
 
-  ArmPosition cubeScoreBackLow = new ArmPosition(-21, -1, 8);
-  ArmPosition cubeScoreBackMiddle = new ArmPosition(-30, 21, -51);
-  ArmPosition cubeScoreBackHigh = new ArmPosition(-48, 35, -90);
+  ArmPosition cubeScoreBackLow = new ArmPosition(-21, 3, -19);
+  ArmPosition cubeScoreBackMiddle = new ArmPosition(-38.25, 28.75, -69);
+  ArmPosition cubeScoreBackHigh = new ArmPosition(-49, 42, -102);
 
   boolean isAuto = false;
   boolean movingAuto = false;
@@ -226,8 +226,8 @@ public class Robot extends TimedRobot {
   }
 
   /* Home Control */
-  if (bbRight.getRawButton(6)) armState = ArmState.goFrontHome;
-  if (bbRight.getRawButton(3)) armState = ArmState.goBackHome;
+  if (bbRight.getRawButton(3)) armState = ArmState.goFrontHome;
+  if (bbRight.getRawButton(6)) armState = ArmState.goBackHome;
 
 
   /* Scoring Positions */
@@ -241,20 +241,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(1)) armState = ArmState.goConePickupBackGround;
-    if (bbRight.getRawButton(4)) armState = ArmState.goConePickupFrontGround;
+    if (bbRight.getRawButton(4)) armState = ArmState.goConePickupBackGround;
+    if (bbRight.getRawButton(1)) armState = ArmState.goConePickupFrontGround;
 
-    if (bbRight.getRawButton(2)) armState = ArmState.goConePickupBackShelf;
-    if (bbRight.getRawButton(5)) armState = ArmState.goConePickupFrontShelf;
+    if (bbRight.getRawButton(5)) armState = ArmState.goConePickupBackShelf;
+    if (bbRight.getRawButton(2)) armState = ArmState.goConePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbRight.getRawButton(1)) armState = ArmState.goConeScoreBackLow;
-    if (bbRight.getRawButton(2)) armState = ArmState.goConeScoreBackMiddle;
-    if (bbRight.getRawButton(3)) armState = ArmState.goConeScoreBackHigh;
+    if (bbLeft.getRawButton(4)) armState = ArmState.goConeScoreBackLow;
+    if (bbLeft.getRawButton(5)) armState = ArmState.goConeScoreBackMiddle;
+    if (bbLeft.getRawButton(6)) armState = ArmState.goConeScoreBackHigh;
   
-    if (bbRight.getRawButton(4)) armState = ArmState.goConeScoreFrontLow;
-    if (bbRight.getRawButton(5)) armState = ArmState.goConeScoreFrontMiddle;
-    if (bbRight.getRawButton(6)) armState = ArmState.goConeScoreFrontHigh;
+    if (bbLeft.getRawButton(1)) armState = ArmState.goConeScoreFrontLow;
+    if (bbLeft.getRawButton(2)) armState = ArmState.goConeScoreFrontMiddle;
+    if (bbLeft.getRawButton(3)) armState = ArmState.goConeScoreFrontHigh;
   }
   else {
     /* Claw Control */
@@ -262,20 +262,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(1)) armState = ArmState.goCubePickupBackGround;
-    if (bbRight.getRawButton(4)) armState = ArmState.goCubePickupFrontGround;
+    if (bbRight.getRawButton(4)) armState = ArmState.goCubePickupBackGround;
+    if (bbRight.getRawButton(1)) armState = ArmState.goCubePickupFrontGround;
     
-    if (bbRight.getRawButton(2)) armState = ArmState.goCubePickupBackShelf;
-    if (bbRight.getRawButton(5)) armState = ArmState.goCubePickupFrontShelf;
+    if (bbRight.getRawButton(5)) armState = ArmState.goCubePickupBackShelf;
+    if (bbRight.getRawButton(2)) armState = ArmState.goCubePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbRight.getRawButton(1)) armState = ArmState.goCubeScoreBackLow;
-    if (bbRight.getRawButton(2)) armState = ArmState.goCubeScoreBackMiddle;
-    if (bbRight.getRawButton(3)) armState = ArmState.goCubeScoreBackHigh;
+    if (bbLeft.getRawButton(4)) armState = ArmState.goCubeScoreBackLow;
+    if (bbLeft.getRawButton(5)) armState = ArmState.goCubeScoreBackMiddle;
+    if (bbLeft.getRawButton(6)) armState = ArmState.goCubeScoreBackHigh;
   
-    if (bbRight.getRawButton(4)) armState = ArmState.goCubeScoreFrontLow;
-    if (bbRight.getRawButton(5)) armState = ArmState.goCubeScoreFrontMiddle;
-    if (bbRight.getRawButton(6)) armState = ArmState.goCubeScoreFrontHigh;
+    if (bbLeft.getRawButton(1)) armState = ArmState.goCubeScoreFrontLow;
+    if (bbLeft.getRawButton(2)) armState = ArmState.goCubeScoreFrontMiddle;
+    if (bbLeft.getRawButton(3)) armState = ArmState.goCubeScoreFrontHigh;
   }
 
   /* Set Claw state */
@@ -452,11 +452,11 @@ public class Robot extends TimedRobot {
     }
 
     /* Rotate Joint 3 towards back of robot */
-    if (c_controller.getPOV() == 90 || c_controller.getPOV() == 135 || c_controller.getPOV() == 45) {
+    if (c_controller.getPOV() == 90) {
       currentArmPosition.incrementZ(-3);
     }
     /* Rotate Joint 3 towards front of robot */
-    else if (c_controller.getPOV() == 270 || c_controller.getPOV() == 315 || c_controller.getPOV() == 225) {
+    else if (c_controller.getPOV() == 270) {
       currentArmPosition.incrementZ(3);
     }
 
@@ -471,10 +471,6 @@ public class Robot extends TimedRobot {
 
     if (bbRight.getRawButton(5)) currentArmPosition.z = 0;
 
-    /* Button to reset Joint 3 encoder */
-    if (bbRight.getRawButtonPressed(1)) {
-      Arm.m_Joint3.getEncoder().setPosition(0);
-    }
     /*************************************************************************************
       END JOINT 3 MANUAL CONTROL
     *************************************************************************************/
@@ -483,7 +479,7 @@ public class Robot extends TimedRobot {
       START X & Y MANUAL CONTROL
     *************************************************************************************/
     /* Increment X & Y */
-    currentArmPosition.incrementX(deadZone(bbRight.getX()) * 0.25);
+    currentArmPosition.incrementX(deadZone(bbRight.getX()) * -0.25);
     currentArmPosition.incrementY(deadZone(bbRight.getY()) * -0.25);
 
     if (armState == ArmState.manual) {
