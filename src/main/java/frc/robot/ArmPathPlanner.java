@@ -1,7 +1,5 @@
 package frc.robot;
 
-import org.ejml.dense.row.mult.SubmatrixOps_FDRM;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class ArmPathPlanner {
@@ -37,21 +35,28 @@ public class ArmPathPlanner {
 
         /* If currently in Front */
         if (currentSide == 1) {
+
             if (desiredSide == 1) {
+
                 path.addPosition(new ArmPosition(desiredArmPosition));
-            }
-            else if (desiredSide == 0) {
+
+            } else if (desiredSide == 0) {
+
                 path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(desiredArmPosition));
-            }
-            else if (desiredSide == -1) {
+
+            } else if (desiredSide == -1) {
+
                 path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(homeBack));
                 path.addPosition(new ArmPosition(desiredArmPosition));
-            }
-            else {
+
+            } else {
+
                 path.addPosition(new ArmPosition(currentArmPosition));
+
             }
+
         } 
         /* If currently within frame perimeter */
         else if (currentSide == 0) {

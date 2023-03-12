@@ -7,13 +7,13 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
@@ -133,7 +133,9 @@ public class Robot extends TimedRobot {
     double score1TimeoutAuto = 0.5;
     int autoStep = 0;
 
-    boolean step4FirstLoop = true;
+    int autoIntakeCounter = 0;
+    int autoArmCounter = 0;
+    int autoOdoCounter = 0;
 
     Timer autoTimeoutTimer = new Timer();
 
@@ -144,6 +146,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+
+        Arm.m_Joint3.getEncoder().setPosition(24);
         // imu.calibrate();
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
@@ -167,6 +171,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
 
+        // SmartDashboard.putNumber("Joint3Raw", Arm.m_Joint3.getEncoder().getPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
         SmartDashboard.putNumber("Sequence Steps", currentSequence.getLength());
         SmartDashboard.putNumber("Current Step", currentSequence.currentIndex);
@@ -208,110 +213,137 @@ public class Robot extends TimedRobot {
         isAuto = false;
         autoStep = 1;
 
+        arm.updateIntake(IntakeState.cubeClosed);
+
         m_driveLeft1.configOpenloopRamp(1);
         m_driveLeft2.configOpenloopRamp(1);
         m_driveRight1.configOpenloopRamp(1);
         m_driveRight2.configOpenloopRamp(1);
+
+        Odometry.MAX_POWER = 0.3;
+
     }
 
     /** This function is called periodically during autonomous. */
     @Override
     public void autonomousPeriodic() {
-      double[] powers;
-      r_robotDrive.feedWatchdog();
+        double[] powers;
+        r_robotDrive.feedWatchdog();
 
-      if (autoStep == 1) {
-          odometry.forward(-36);
-          autoStep = 2;
-      } else if (autoStep == 2) {
-          powers = odometry.update();
+        if (autoStep == 1) {
+
+            arm.updateArm(-1, 9, 90);
+
+            odometry.straight(26.0);
+            autoStep = 2;
+            autoOdoCounter = 0;
+
+        } else if (autoStep == 2) {
+
+            arm.updateArm(-1, 9, 90);
+
+            powers = odometry.update();
           
-          SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-          SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
-          mg_rightDrive.set(powers[0]);
-          mg_leftDrive.set(powers[0]);
+            mg_rightDrive.set(powers[0]);
+            mg_leftDrive.set(powers[0]);
 
-          if (odometry.moveFinished()) {
-            autoStep = 3;
-            odometry.forward(36);
-          }
-      } else if (autoStep == 3) {
-        powers = odometry.update();
+            if (Math.abs(Odometry.genPID.getPositionError()) < 4) autoOdoCounter++;
+            if ((odometry.moveFinished() || autoOdoCounter > 125) && arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) {
+
+                autoStep = 3;
+                autoArmCounter = 0;
+                
+            }
+            
+        } else if (autoStep == 3) {
+
+            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+
+            autoArmCounter++;
+
+            if (autoArmCounter > 125 || (arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse))) {
+                
+                autoStep = 4;
+                odometry.straight(-25);
+            
+            }
+
+        } else if (autoStep == 4) {
+
+            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+
+            powers = odometry.update();
+
+            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+
+            mg_rightDrive.set(powers[0]);
+            mg_leftDrive.set(powers[0]);
+
+            if (odometry.moveFinished()) {
+
+                autoStep = 5;
+                autoIntakeCounter = 0;
+                
+            }
+
+        } else if (autoStep == 5) {
+
+            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+
+            arm.updateIntake(IntakeState.cubeOpen);
+            autoIntakeCounter++;
+
+            if (autoIntakeCounter > 50) {
+
+                autoStep = 6;
+                Odometry.MAX_POWER = 0.55;
+                odometry.straight(159);
+                autoArmCounter = 0;
+
+            }
+
+        } else if (autoStep == 6) {
+
+            powers = odometry.update();
+
+            autoArmCounter++;
+            if (autoArmCounter > 50) arm.updateArm(0, 9, 90);
         
-        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
-        mg_rightDrive.set(powers[0]);
-        mg_leftDrive.set(powers[0]);
-        // r_robotDrive.arcadeDrive(powers[0], powers[1]);
-    }
+            mg_rightDrive.set(powers[0]);
+            mg_leftDrive.set(powers[0]);
 
-        // Code structure for actual auto
-        /*
-         * if (autoStep == 1) {
-         * 
-         * odometry.forward(24.5);
-         * 
-         * if (odometry.destinationReached) {
-         * 
-         * autoStep++;
-         * odometry.zeroEncoders()
-         * 
-         * }
-         * 
-         * } else if (autoStep == 2) {
-         * 
-         * arm.updateArm(cubeScoreFrontHigh);
-         * 
-         * if (arm.isArmInPosition()) {
-         * 
-         * autoStep++;
-         * odometry.zeroEncoders()
-         * 
-         * }
-         * 
-         * } else if (autoStep == 3) {
-         * 
-         * odometry.reverse(23.7);
-         * 
-         * if (odometry.destinationReached) {
-         * 
-         * autoStep++;
-         * odometry.zeroEncoders()
-         * 
-         * }
-         * 
-         * } else if (autoStep == 4) {
-         * 
-         * if (step4FirstLoop) {
-         * 
-         * step4FirstLoop = false;
-         * 
-         * }
-         * 
-         * arm.updateIntake(IntakeState.cubeOpen);
-         * 
-         * if (autoTimeoutTimer.get() >= score1TimeoutAuto) {
-         * 
-         * autoStep++;
-         * odometry.zeroEncoders()
-         * 
-         * }
-         * 
-         * } else if (autoStep == 5) {
-         * 
-         * odometry.forward(159.1);
-         * 
-         * if (odometry.destinationReached) {
-         * 
-         * autoStep++;
-         * odometry.zeroEncoders()
-         * 
-         * }
-         * 
-         * } else {}
-         */
+            if (odometry.moveFinished()) {
+
+                autoStep = 5;
+                autoIntakeCounter = 0;
+                
+            }
+
+        } else {
+
+            arm.setJoint1(0);
+            arm.setJoint2(0);
+            arm.setJoint3(0);
+
+            Arm.joint1Brake.set(Value.kReverse);
+            Arm.joint2Brake.set(Value.kReverse);
+
+            powers = odometry.update();
+        
+            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+
+            mg_rightDrive.set(0);
+            mg_leftDrive.set(0);
+            
+        }
 
     }
 
@@ -322,7 +354,7 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
 
         isAuto = false;
-        currentArmPosition.setCoordinates(0, 9, 0);
+        currentArmPosition.setCoordinates(0, 9, 90);
         arm.joint1PID.reset();
         arm.joint2PID.reset();
 

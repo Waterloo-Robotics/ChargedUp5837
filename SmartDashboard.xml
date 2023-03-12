@@ -1,5 +1,23 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Dist Error" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="479" y="435"/>
+	</widget>
+	<widget field="Dist Reached" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="461" y="413"/>
+	</widget>
+	<widget field="Distance Traveled" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="437" y="389"/>
+	</widget>
+	<widget field="genPower" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="401" y="4"/>
+	</widget>
+	<widget field="Right Received Power" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="202" y="3"/>
+	</widget>
+	<widget field="Left Received Power" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="17" y="5"/>
+	</widget>
 	<widget field="Right Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="202" y="415"/>
 	</widget>
@@ -222,13 +240,15 @@
 	<hidden field="Arm in Pos"/>
 	<hidden field="NEO J2 (A)"/>
 	<hidden field="J2 Timeout En"/>
+	<hidden field="Left Power"/>
 	<hidden field="Limelight_Interface"/>
 	<hidden field="Limelight_Stream"/>
 	<hidden field="Arm Ctrl State"/>
 	<hidden field="Limelight_PipelineName"/>
-	<hidden field="J1 Timeout"/>
 	<hidden field="Compressor"/>
+	<hidden field="J1 Timeout"/>
 	<hidden field="J2 Timeout"/>
+	<hidden field="Right Power"/>
 	<hidden field="NEO J1 1 (A)"/>
 	<hidden field="Sequence Finished"/>
 	<hidden field="NEO J1 2 (A)"/>
