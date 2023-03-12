@@ -193,8 +193,8 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Right Encoder", rightDriveEnc.getQuadraturePosition());
 
         SmartDashboard.putNumber("genPower", odometry.genPower);
-        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+        // SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+        // SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
         SmartDashboard.putNumber("Drive Error", odometry.error);
         SmartDashboard.putNumber("Drive Travelled", odometry.distanceTravelled);
 
@@ -207,16 +207,45 @@ public class Robot extends TimedRobot {
         timer.start();
         isAuto = false;
         autoStep = 1;
+
+        m_driveLeft1.configOpenloopRamp(1);
+        m_driveLeft2.configOpenloopRamp(1);
+        m_driveRight1.configOpenloopRamp(1);
+        m_driveRight2.configOpenloopRamp(1);
     }
 
     /** This function is called periodically during autonomous. */
     @Override
     public void autonomousPeriodic() {
-        if (autoStep == 1) {
-            odometry.forward(12);
-        } else {
-            odometry.update();
-        }
+      double[] powers;
+      r_robotDrive.feedWatchdog();
+
+      if (autoStep == 1) {
+          odometry.forward(-36);
+          autoStep = 2;
+      } else if (autoStep == 2) {
+          powers = odometry.update();
+          
+          SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+          SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+
+          mg_rightDrive.set(powers[0]);
+          mg_leftDrive.set(powers[0]);
+
+          if (odometry.moveFinished()) {
+            autoStep = 3;
+            odometry.forward(36);
+          }
+      } else if (autoStep == 3) {
+        powers = odometry.update();
+        
+        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+
+        mg_rightDrive.set(powers[0]);
+        mg_leftDrive.set(powers[0]);
+        // r_robotDrive.arcadeDrive(powers[0], powers[1]);
+    }
 
         // Code structure for actual auto
         /*
@@ -296,6 +325,11 @@ public class Robot extends TimedRobot {
         currentArmPosition.setCoordinates(0, 9, 0);
         arm.joint1PID.reset();
         arm.joint2PID.reset();
+
+        m_driveLeft1.configOpenloopRamp(0.25);
+        m_driveLeft2.configOpenloopRamp(0.25);
+        m_driveRight1.configOpenloopRamp(0.25);
+        m_driveRight2.configOpenloopRamp(0.25);
 
     }
 
