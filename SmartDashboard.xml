@@ -1,5 +1,11 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Right Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="202" y="415"/>
+	</widget>
+	<widget field="Left Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="39" y="415"/>
+	</widget>
 	<widget field="Joint 1 Added P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="673" y="348"/>
 	</widget>
@@ -212,7 +218,18 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="joint2Setpoint"/>
-	<hidden field="x"/>
-	<hidden field="y"/>
+	<hidden field="J1 Timeout En"/>
+	<hidden field="Arm in Pos"/>
+	<hidden field="NEO J2 (A)"/>
+	<hidden field="J2 Timeout En"/>
+	<hidden field="Limelight_Interface"/>
+	<hidden field="Limelight_Stream"/>
+	<hidden field="Arm Ctrl State"/>
+	<hidden field="Limelight_PipelineName"/>
+	<hidden field="J1 Timeout"/>
+	<hidden field="Compressor"/>
+	<hidden field="J2 Timeout"/>
+	<hidden field="NEO J1 1 (A)"/>
+	<hidden field="Sequence Finished"/>
+	<hidden field="NEO J1 2 (A)"/>
 </xml>

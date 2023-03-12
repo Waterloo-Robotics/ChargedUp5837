@@ -37,16 +37,18 @@ public class Robot extends TimedRobot {
   PowerDistribution pdp = new PowerDistribution(0, ModuleType.kCTRE);
 
   /* Drive Base Motor Controllers */
-  WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
+  public static WPI_TalonSRX m_driveRight1 = new WPI_TalonSRX(6);
   public static WPI_TalonSRX m_driveRight2 = new WPI_TalonSRX(7);
-  private final MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
+  public static MotorControllerGroup mg_rightDrive = new MotorControllerGroup(m_driveRight1, m_driveRight2);
 
-  WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
+  public static WPI_TalonSRX m_driveLeft1 = new WPI_TalonSRX(8);
   public static WPI_TalonSRX m_driveLeft2 = new WPI_TalonSRX(9);
-  private final MotorControllerGroup mg_leftDrive = new MotorControllerGroup(m_driveLeft1, m_driveLeft2);
-  
-  private final DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
-  private final XboxController c_controller = new XboxController(1);
+  public static MotorControllerGroup mg_leftDrive = new MotorControllerGroup(m_driveLeft1, m_driveLeft2);
+
+  static DifferentialDrive r_robotDrive = new DifferentialDrive(mg_leftDrive, mg_rightDrive);
+
+  /* Driver Input */
+  final static XboxController c_controller = new XboxController(1);
   Joystick bbRight = new Joystick(3);
   Joystick bbLeft = new Joystick(2);
   private final Timer timer = new Timer();
@@ -54,12 +56,17 @@ public class Robot extends TimedRobot {
   public static SensorCollection Joint1Enc = m_driveLeft2.getSensorCollection();
   public static SensorCollection Joint2Enc = m_driveRight2.getSensorCollection();
 
+  public static SensorCollection leftDriveEnc = m_driveLeft1.getSensorCollection();
+  public static SensorCollection rightDriveEnc = m_driveRight1.getSensorCollection();
+
+  Odometry odometry = new Odometry(mg_leftDrive, mg_rightDrive, r_robotDrive, leftDriveEnc, rightDriveEnc);
+
   Arm arm = new Arm(m_driveLeft2, m_driveRight2);
   int joint1Timeout;
-  int joint1TimeoutLimit = 30;
+  int joint1TimeoutLimit = 15;
   boolean joint1TimeoutEnable = true;
   int joint2Timeout;
-  int joint2TimeoutLimit = 30;
+  int joint2TimeoutLimit = 15;
   boolean joint2TimeoutEnable = true;
 
   boolean timeoutOverride = false;
@@ -93,16 +100,16 @@ public class Robot extends TimedRobot {
   ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 39.25, -130);
   ArmPosition coneScoreFrontHigh = new ArmPosition(48.75, 53, -112);
 
-  ArmPosition coneScoreBackLow = new ArmPosition(-21, 3, -19);
-  ArmPosition coneScoreBackMiddle = new ArmPosition(-38.25, 44, -81);
-  ArmPosition coneScoreBackHigh = new ArmPosition(-50.25, 49.75, -105);
+  ArmPosition coneScoreBackLow = new ArmPosition(-21, 3, 41);
+  ArmPosition coneScoreBackMiddle = new ArmPosition(-41, 37.5, -39);
+  ArmPosition coneScoreBackHigh = new ArmPosition(-50.25, 49.75, -69);
 
   /* Cube Scoring Positions */
   ArmPosition cubeScoreFrontLow = new ArmPosition(33, 7.5, -90);
   ArmPosition cubeScoreFrontMiddle = new ArmPosition(42.25, 29, -74);
   ArmPosition cubeScoreFrontHigh = new ArmPosition(51.75, 45, -44);
 
-  ArmPosition cubeScoreBackLow = new ArmPosition(-21, 3, -19);
+  ArmPosition cubeScoreBackLow = new ArmPosition(-21, 3, 41);
   ArmPosition cubeScoreBackMiddle = new ArmPosition(-38.25, 28.75, -69);
   ArmPosition cubeScoreBackHigh = new ArmPosition(-49, 42, -102);
 
@@ -120,6 +127,13 @@ public class Robot extends TimedRobot {
 
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   NetworkTableEntry camMode;
+
+  double score1TimeoutAuto = 0.5;
+  int autoStep = 0;
+
+  boolean step4FirstLoop = true;
+
+  Timer autoTimeoutTimer = new Timer();
   
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -164,7 +178,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO J1 2 (A)", pdp.getCurrent(2));
     SmartDashboard.putNumber("NEO J2 (A)", pdp.getCurrent(3));
 
-    SmartDashboard.putString("Arm Ctrl State", String.valueOf(arm.armControlState));
+    SmartDashboard.putString("Arm Ctrl State", String.valueOf(Arm.armControlState));
     SmartDashboard.putBoolean("Arm in Pos", arm.isArmInPosition());
     SmartDashboard.putBoolean("Sequence Finished", currentSequence.sequenceFinished());
 
@@ -173,7 +187,13 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("J2 Timeout En", joint2TimeoutEnable);
     SmartDashboard.putNumber("J2 Timeout", joint2Timeout);
 
-    arm.getArmCoordinates(arm.joint1CurrentPosition(), arm.joint2CurrentPosition());
+    SmartDashboard.putNumber("Left Encoder", leftDriveEnc.getQuadraturePosition());
+    SmartDashboard.putNumber("Right Encoder", rightDriveEnc.getQuadraturePosition());
+
+    SmartDashboard.putNumber("genPower", Odometry.genPower);
+    SmartDashboard.putNumber("Left Received Power", Odometry.leftDrive.get());
+    SmartDashboard.putNumber("Right Received Power", Odometry.rightDrive.get());
+
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -181,11 +201,81 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     timer.reset();
     timer.start();
+    isAuto = false;
+    autoStep = 1;
+    odometry.zeroEncoders();
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
+
+    odometry.forward(12);
+    // Code structure for actual auto
+    /*
+    if (autoStep == 1) {
+
+      odometry.forward(24.5);
+
+      if (odometry.destinationReached) {
+        
+        autoStep++;
+        odometry.zeroEncoders()
+
+      }
+
+    } else if (autoStep == 2) {
+
+      arm.updateArm(cubeScoreFrontHigh);
+
+      if (arm.isArmInPosition()) {
+        
+        autoStep++;
+        odometry.zeroEncoders()
+
+      }
+
+    } else if (autoStep == 3) {
+      
+      odometry.reverse(23.7);
+    
+      if (odometry.destinationReached) {
+        
+        autoStep++;
+        odometry.zeroEncoders()
+
+      }
+
+    } else if (autoStep == 4) {
+
+      if (step4FirstLoop) {
+
+        step4FirstLoop = false;
+
+      }
+
+      arm.updateIntake(IntakeState.cubeOpen);
+
+      if (autoTimeoutTimer.get() >= score1TimeoutAuto) {
+        
+        autoStep++;
+        odometry.zeroEncoders()
+
+      }
+
+    } else if (autoStep == 5) {
+
+      odometry.forward(159.1);
+
+      if (odometry.destinationReached) {
+        
+        autoStep++;
+        odometry.zeroEncoders()
+
+      }
+
+    } else {}
+*/
 
   }
 
@@ -241,20 +331,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(4)) armState = ArmState.goConePickupBackGround;
-    if (bbRight.getRawButton(1)) armState = ArmState.goConePickupFrontGround;
+    if (bbRight.getRawButtonPressed(4)) armState = ArmState.goConePickupBackGround;
+    if (bbRight.getRawButtonPressed(1)) armState = ArmState.goConePickupFrontGround;
 
-    if (bbRight.getRawButton(5)) armState = ArmState.goConePickupBackShelf;
-    if (bbRight.getRawButton(2)) armState = ArmState.goConePickupFrontShelf;
+    if (bbRight.getRawButtonPressed(5)) armState = ArmState.goConePickupBackShelf;
+    if (bbRight.getRawButtonPressed(2)) armState = ArmState.goConePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(4)) armState = ArmState.goConeScoreBackLow;
-    if (bbLeft.getRawButton(5)) armState = ArmState.goConeScoreBackMiddle;
-    if (bbLeft.getRawButton(6)) armState = ArmState.goConeScoreBackHigh;
+    if (bbLeft.getRawButtonPressed(4)) armState = ArmState.goConeScoreBackLow;
+    if (bbLeft.getRawButtonPressed(5)) armState = ArmState.goConeScoreBackMiddle;
+    if (bbLeft.getRawButtonPressed(6)) armState = ArmState.goConeScoreBackHigh;
   
-    if (bbLeft.getRawButton(1)) armState = ArmState.goConeScoreFrontLow;
-    if (bbLeft.getRawButton(2)) armState = ArmState.goConeScoreFrontMiddle;
-    if (bbLeft.getRawButton(3)) armState = ArmState.goConeScoreFrontHigh;
+    if (bbLeft.getRawButtonPressed(1)) armState = ArmState.goConeScoreFrontLow;
+    if (bbLeft.getRawButtonPressed(2)) armState = ArmState.goConeScoreFrontMiddle;
+    if (bbLeft.getRawButtonPressed(3)) armState = ArmState.goConeScoreFrontHigh;
   }
   else {
     /* Claw Control */
@@ -262,20 +352,20 @@ public class Robot extends TimedRobot {
     if (c_controller.getAButtonPressed()) intakeState = IntakeState.cubeClosed;
 
     /* Pickup Positions */
-    if (bbRight.getRawButton(4)) armState = ArmState.goCubePickupBackGround;
-    if (bbRight.getRawButton(1)) armState = ArmState.goCubePickupFrontGround;
+    if (bbRight.getRawButtonPressed(4)) armState = ArmState.goCubePickupBackGround;
+    if (bbRight.getRawButtonPressed(1)) armState = ArmState.goCubePickupFrontGround;
     
-    if (bbRight.getRawButton(5)) armState = ArmState.goCubePickupBackShelf;
-    if (bbRight.getRawButton(2)) armState = ArmState.goCubePickupFrontShelf;
+    if (bbRight.getRawButtonPressed(5)) armState = ArmState.goCubePickupBackShelf;
+    if (bbRight.getRawButtonPressed(2)) armState = ArmState.goCubePickupFrontShelf;
 
     /* Scoring Positions */
-    if (bbLeft.getRawButton(4)) armState = ArmState.goCubeScoreBackLow;
-    if (bbLeft.getRawButton(5)) armState = ArmState.goCubeScoreBackMiddle;
-    if (bbLeft.getRawButton(6)) armState = ArmState.goCubeScoreBackHigh;
+    if (bbLeft.getRawButtonPressed(4)) armState = ArmState.goCubeScoreBackLow;
+    if (bbLeft.getRawButtonPressed(5)) armState = ArmState.goCubeScoreBackMiddle;
+    if (bbLeft.getRawButtonPressed(6)) armState = ArmState.goCubeScoreBackHigh;
   
-    if (bbLeft.getRawButton(1)) armState = ArmState.goCubeScoreFrontLow;
-    if (bbLeft.getRawButton(2)) armState = ArmState.goCubeScoreFrontMiddle;
-    if (bbLeft.getRawButton(3)) armState = ArmState.goCubeScoreFrontHigh;
+    if (bbLeft.getRawButtonPressed(1)) armState = ArmState.goCubeScoreFrontLow;
+    if (bbLeft.getRawButtonPressed(2)) armState = ArmState.goCubeScoreFrontMiddle;
+    if (bbLeft.getRawButtonPressed(3)) armState = ArmState.goCubeScoreFrontHigh;
   }
 
   /* Set Claw state */
@@ -436,8 +526,13 @@ public class Robot extends TimedRobot {
 
   /* If Inverse Kinematic PID Control is enabled */
   if (isAuto) {
+    double fbSpeed = 0;
 
-    r_robotDrive.arcadeDrive(c_controller.getLeftY(), 0.75 * c_controller.getRightX());
+    if (c_controller.getPOV() == 0) fbSpeed = -0.45;
+    else if (c_controller.getPOV() == 180) fbSpeed = 0.45;
+    else fbSpeed = c_controller.getLeftY();
+
+    r_robotDrive.arcadeDrive(fbSpeed, 0.75 * c_controller.getRightX());
 
     /*************************************************************************************
       START JOINT 3 MANUAL CONTROL
@@ -615,7 +710,12 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+
+    if (bbRight.getRawButton(1)) leftDriveEnc.setQuadraturePosition(0, 0);
+    if (bbRight.getRawButton(4)) rightDriveEnc.setQuadraturePosition(0, 0);
+
+  }
 
   /* Apply a fixed dead zone to an input */
   public double deadZone(double input) {
