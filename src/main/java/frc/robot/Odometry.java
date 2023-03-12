@@ -1,205 +1,138 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.SensorCollection;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Odometry {
-
-
-    /* Drive Base Motor Controllers */
-    public static MotorControllerGroup rightDrive;
-    public static MotorControllerGroup leftDrive;
-    DifferentialDrive robotDrive;
+    /* Motor Controllers */
+    private static MotorControllerGroup rightDrive;
+    private static MotorControllerGroup leftDrive;
+    private static DifferentialDrive robotDrive;
 
     /* Drive Encoders */
-    public static SensorCollection leftEncoder;
     public static SensorCollection rightEncoder;
+    public static SensorCollection leftEncoder;
 
-    // constants for inch calibration
-    double countsPerRev = 4096;
-    double wheelDiameter = 6.0; // inches
-    double wheelCircumference = wheelDiameter * Math.PI;
-    double gearRatio = 1.0;
+    /* Phyiscal Parameters */
+    private static double countsPerRev = 4096;
+    private static double wheelDiameter = 6.0;
+    private static double wheelCircumference = wheelDiameter * Math.PI;
+    private static double gearRatio = 1.0;
 
-    // PID constants
-    public static double P_gen_forwardback = 0.5;
-    public static double P_gen_turn = 0.03;
-    public static double P_differential = 0.1;
+    /* PID Constants */
+    private static double P_general_fwrd = 0.05;
+    private static double P_general_turn = 0.03;
+    private static double P_differential = 0.01;
 
-    // Speed constants
-    public static double MAX_POWER = 0.05;
-    public static double MIN_POWER_STRAIGHT = 0;
-    public static double MIN_POWER_TURN = 0;
-        
-    double rightOffset = 0;
-    double leftOffset = 0;
-    double genPower = 0;
-    double diffPower = 0;
+    /* Speed Constants */
+    private static double MAX_POWER = 0.05;
+    private static double MIN_POWER_STRAIGHT = 0;
+    private static double MIN_POWER_TURN = 0;
 
-    double distanceTravelled = 0;
-    double error = 0;
-    double differentialError = 0;
+    public double genPower;
+    public double diffPower;
 
-    double rightTravelled, leftTravelled = 0;
+    public double distanceTravelled;
+    public double error;
+    public double differentialError;
 
-    public static boolean destinationReached = false;
+    public double rightTravelled;
+    public double leftTravelled;
 
-    public Odometry(MotorControllerGroup leftDrive,
-                    MotorControllerGroup rightDrive,
-                    DifferentialDrive robotDrive,
-                    SensorCollection leftEncoder, SensorCollection rightEncoder) {
-        
-        this.leftDrive = leftDrive;
-        this.rightDrive = rightDrive;
-        
-        this.robotDrive = robotDrive;
+    public double rightTarget;
+    public double leftTarget;
+    public double forwardTarget;
 
-        leftDrive.setInverted(true);
+    public boolean destinationReached;
 
-        this.leftEncoder = leftEncoder;
-        this.rightEncoder = rightEncoder;
-
+    public Odometry (MotorControllerGroup leftMotorGroup,
+                     MotorControllerGroup rightMotorGroup,
+                     DifferentialDrive drivebase,
+                     SensorCollection leftEnc,
+                     SensorCollection rightEnc)
+    {
+        Odometry.leftDrive = leftMotorGroup;
+        Odometry.rightDrive = rightMotorGroup;
+        Odometry.robotDrive = drivebase;
+        Odometry.leftEncoder = leftEnc;
+        Odometry.rightEncoder =  rightEnc;
     }
 
-    public double toInches(double encoderCount) {
+    public void update() {
 
-        double inches = encoderCount / this.countsPerRev * this.gearRatio * this.wheelCircumference;
+        /* If we haven't reached our target perform the calcualtions, otherwise stop drivebase */
+        if (!this.destinationReached) {
+            this.rightTravelled = toInches(Odometry.rightEncoder.getQuadraturePosition());
+            this.leftTravelled = toInches(-Odometry.leftEncoder.getQuadraturePosition());
 
-        return inches;
-    }
-
-    public void zeroEncoders() {
-
-        leftEncoder.setQuadraturePosition(0, 0);
-        rightEncoder.setQuadraturePosition(0, 0);
-
-    }
-
-    public void forward(double INCHES) {
-        
-        destinationReached = this.distanceTravelled > INCHES;
-        SmartDashboard.putNumber("Distance Traveled", this.distanceTravelled);
-        SmartDashboard.putBoolean("Dist Reached", destinationReached);
-        SmartDashboard.putNumber("Dist Error", this.error);
-
-        if (!destinationReached) {
-
-            this.leftTravelled = -toInches(Robot.leftDriveEnc.getQuadraturePosition());
-            this.rightTravelled = toInches(Robot.rightDriveEnc.getQuadraturePosition());
-            this.distanceTravelled = (this.leftTravelled + this.rightTravelled) / 2.0;
-
-            this.error = INCHES - this.distanceTravelled;
+            this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
             this.differentialError = this.rightTravelled - this.leftTravelled;
 
-            this.genPower = (this.genPower + (this.error * P_gen_forwardback)) / 2.0;
+            this.error = this.forwardTarget - this.distanceTravelled;
 
-            if (this.genPower > MAX_POWER) this.genPower = MAX_POWER;
-            else if (this.genPower < -MAX_POWER) this.genPower = -MAX_POWER;
-
-            this.diffPower = this.genPower * ((diffPower + (differentialError * P_differential)) / 2.0);
-
-            Robot.r_robotDrive.arcadeDrive(genPower, diffPower);
-            // Robot.r_robotDrive.arcadeDrive(Robot.c_controller.getLeftY(), Robot.c_controller.getRightX());
-
+            this.genPower = clipPowerStraight(this.error * P_general_fwrd);
+            this.diffPower = clipPowerStraight(this.differentialError * Odometry.P_differential);
         } else {
-
-            leftTravelled = 0;
-            rightTravelled = 0;
-            distanceTravelled = 0;
-
+            this.genPower = 0;
+            this.diffPower = 0;
         }
 
-    }
-
-    public void reverse(double INCHES) {
-
-        if (!destinationReached) {
-
-            leftTravelled = toInches(leftEncoder.getQuadraturePosition());
-            rightTravelled = -toInches(rightEncoder.getQuadraturePosition());
-            distanceTravelled = (leftTravelled + rightTravelled) / 2.0;
-
-            error = INCHES - distanceTravelled;
-            differentialError = rightTravelled - leftTravelled;
-
-            genPower = (genPower + (error * P_gen_forwardback)) / 2.0;
-
-            diffPower = genPower * ((rightOffset + (differentialError * P_differential)) / 2.0);
-
-            robotDrive.arcadeDrive(genPower, diffPower);
-
-            destinationReached = distanceTravelled < INCHES;
-
-        } else {
-
-            Robot.mg_leftDrive.set(0);
-            Robot.mg_rightDrive.set(0);
-            leftTravelled = 0;
-            rightTravelled = 0;
-            distanceTravelled = 0;
-
+        /* Check if target reached */
+        if (this.distanceTravelled >= this.forwardTarget) {
+            this.destinationReached = true;
         }
 
+        Odometry.robotDrive.arcadeDrive(this.genPower, this.diffPower);
     }
 
-    public void turnRight(double INCHES) {
+    public boolean moveFinished() {
+        return this.destinationReached;
+    }
 
-        if (!destinationReached) {
+    public void forward(double inches) {
 
-            leftTravelled = -toInches(leftEncoder.getQuadraturePosition());
-            rightTravelled = -toInches(rightEncoder.getQuadraturePosition());
-            distanceTravelled = (leftTravelled + rightTravelled) / 2.0;
+        /* Reset static variables */
+        resetEncoders();
+        this.rightTravelled = 0;
+        this.leftTravelled = 0;
+        this.distanceTravelled = 0;
+        this.error = 0;
 
-            error = INCHES - distanceTravelled;
+        this.genPower = 0;
+        this.diffPower = 0;
 
-            genPower = (genPower + (error * P_gen_turn)) / 2.0;
+        this.destinationReached = false;
 
-            robotDrive.arcadeDrive(0, genPower);
+        this.forwardTarget = inches;
+    }
 
-            destinationReached = distanceTravelled < INCHES;
+    private static double toInches(double encoderCount) {
+        return (encoderCount / Odometry.countsPerRev) * Odometry.gearRatio * Odometry.wheelCircumference;
+    }
 
+    public static void resetEncoders() {
+        Odometry.rightEncoder.setQuadraturePosition(0, 0);
+        Odometry.leftEncoder.setQuadraturePosition(0, 0);
+    }
+
+    private static double clipPowerStraight(double power) {
+        if (Math.abs(power) < Odometry.MIN_POWER_STRAIGHT) 
+        {
+            return Odometry.MIN_POWER_STRAIGHT * Math.signum(power);
+        } else if (Math.abs(power) > Odometry.MAX_POWER) 
+        {
+            return Odometry.MAX_POWER * Math.signum(power);
         } else {
-
-            Robot.mg_leftDrive.set(0);
-            Robot.mg_rightDrive.set(0);
-            leftTravelled = 0;
-            rightTravelled = 0;
-            distanceTravelled = 0;
-
+            return power;
         }
-
     }
 
-    public void turnLeft(double INCHES) {
-
-        if (!destinationReached) {
-
-            leftTravelled = toInches(leftEncoder.getQuadraturePosition());
-            rightTravelled = toInches(rightEncoder.getQuadraturePosition());
-            distanceTravelled = (leftTravelled + rightTravelled) / 2.0;
-
-            error = INCHES - distanceTravelled;
-
-            genPower = (genPower + (error * P_gen_turn)) / 2.0;
-
-            robotDrive.arcadeDrive(0, genPower);
-
-            destinationReached = distanceTravelled < INCHES;
-
-        } else {
-
-            Robot.mg_leftDrive.set(0);
-            Robot.mg_rightDrive.set(0);
-            leftTravelled = 0;
-            rightTravelled = 0;
-            distanceTravelled = 0;
-
-        }
-
-    }
     
+
+
+
+
+
 }
