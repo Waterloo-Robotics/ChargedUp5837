@@ -321,7 +321,7 @@ public class Robot extends TimedRobot {
 
             if (odometry.moveFinished()) {
 
-                autoStep = 5;
+                autoStep = 7;
                 autoIntakeCounter = 0;
                 
             }
