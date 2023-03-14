@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.io.ObjectInputStream.GetField;
+
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 // import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Arm.ArmControlState;
 import frc.robot.Arm.ArmState;
@@ -130,6 +133,7 @@ public class Robot extends TimedRobot {
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     NetworkTableEntry camMode;
 
+    /* Autonomous Variables */
     double score1TimeoutAuto = 0.5;
     int autoStep = 0;
 
@@ -138,6 +142,14 @@ public class Robot extends TimedRobot {
     int autoOdoCounter = 0;
 
     Timer autoTimeoutTimer = new Timer();
+
+    private static final String defaultAuto = "Default Auto";
+    private static final String rightAuto = "Right Auto";
+    private static final String middleAuto = "Middle Auto";
+    private static final String leftAuto = "Left Auto";
+    private static final String middleChargeAuto = "Middle Charge Auto";
+    private String autoSelected;
+    private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -165,6 +177,15 @@ public class Robot extends TimedRobot {
         camMode = table.getEntry("camMode");
 
         camMode.setNumber(1);
+        autoTimeoutTimer.reset();
+        autoTimeoutTimer.start();
+
+        autoChooser.setDefaultOption("Default Auto", defaultAuto);
+        autoChooser.addOption("Right Auto", rightAuto);
+        autoChooser.addOption("Middle Auto", middleAuto);
+        autoChooser.addOption("Left Auto", leftAuto);
+        autoChooser.addOption("Middle Charge Auto", middleChargeAuto);
+        SmartDashboard.putData("Auto choices", autoChooser);
     }
 
     public void robotPeriodic() {
@@ -222,6 +243,7 @@ public class Robot extends TimedRobot {
 
         Odometry.MAX_POWER = 0.3;
 
+        autoSelected = autoChooser.getSelected();
     }
 
     /** This function is called periodically during autonomous. */
@@ -248,7 +270,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             mg_rightDrive.set(powers[0]);
-            mg_leftDrive.set(powers[0]);
+            mg_leftDrive.set(powers[1]);
 
             if (Math.abs(Odometry.genPID.getPositionError()) < 4) autoOdoCounter++;
             if ((odometry.moveFinished() || autoOdoCounter > 125) && arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) {
@@ -281,7 +303,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             mg_rightDrive.set(powers[0]);
-            mg_leftDrive.set(powers[0]);
+            mg_leftDrive.set(powers[1]);
 
             if (odometry.moveFinished()) {
 
@@ -301,7 +323,24 @@ public class Robot extends TimedRobot {
 
                 autoStep = 6;
                 Odometry.MAX_POWER = 0.55;
-                odometry.straight(159);
+
+                switch (autoSelected) {
+                    case (defaultAuto):
+                        odometry.straight(0);
+                        break;
+                    case (rightAuto):
+                        odometry.straight(159);
+                        break;
+                    case (leftAuto):
+                        odometry.straight(159);
+                        break;
+                    case (middleAuto):
+                        odometry.straight(0);
+                        break;
+                    case (middleChargeAuto):
+                        odometry.straight(100);
+                        break;
+                }
                 autoArmCounter = 0;
 
             }
@@ -317,7 +356,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             mg_rightDrive.set(powers[0]);
-            mg_leftDrive.set(powers[0]);
+            mg_leftDrive.set(powers[1]);
 
             if (odometry.moveFinished()) {
 
@@ -334,8 +373,6 @@ public class Robot extends TimedRobot {
 
             Arm.joint1Brake.set(Value.kReverse);
             Arm.joint2Brake.set(Value.kReverse);
-
-            powers = odometry.update();
         
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
@@ -343,6 +380,22 @@ public class Robot extends TimedRobot {
             mg_rightDrive.set(0);
             mg_leftDrive.set(0);
             
+        }
+
+        /* Just for extra protection */
+        if (autoTimeoutTimer.get() > 13.5) {
+
+            Arm.joint1Brake.set(Value.kReverse);
+            Arm.joint2Brake.set(Value.kReverse);
+
+            arm.setJoint1(0);
+            arm.setJoint2(0);
+            arm.setJoint3(0);
+
+            mg_rightDrive.set(0);
+            mg_leftDrive.set(0);
+
+            autoTimeoutTimer.stop();
         }
 
     }
