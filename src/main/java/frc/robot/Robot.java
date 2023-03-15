@@ -83,7 +83,7 @@ public class Robot extends TimedRobot {
 
     boolean coneControl, front = true;
 
-    ArmPosition home = new ArmPosition(10, 18, 0);
+    ArmPosition home = new ArmPosition(0, 9, 90);
     ArmPosition homeFront = new ArmPosition(16, 9, 90);
     ArmPosition homeBack = new ArmPosition(-16, 9, 90);
 
@@ -135,7 +135,7 @@ public class Robot extends TimedRobot {
 
     /* Autonomous Variables */
     double score1TimeoutAuto = 0.5;
-    int autoStep = 0;
+    int autoStep = 1;
 
     int autoIntakeCounter = 0;
     int autoArmCounter = 0;
@@ -145,9 +145,10 @@ public class Robot extends TimedRobot {
 
     private static final String defaultAuto = "Default Auto";
     private static final String rightAuto = "Right Auto";
-    private static final String middleAuto = "Middle Auto";
     private static final String leftAuto = "Left Auto";
+    private static final String middleAuto = "Middle Auto";
     private static final String middleChargeAuto = "Middle Charge Auto";
+    private static final String testAuto = "Test Auto";
     private String autoSelected;
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
@@ -182,9 +183,10 @@ public class Robot extends TimedRobot {
 
         autoChooser.setDefaultOption("Default Auto", defaultAuto);
         autoChooser.addOption("Right Auto", rightAuto);
-        autoChooser.addOption("Middle Auto", middleAuto);
         autoChooser.addOption("Left Auto", leftAuto);
+        autoChooser.addOption("Middle Auto", middleAuto);
         autoChooser.addOption("Middle Charge Auto", middleChargeAuto);
+        autoChooser.addOption("Test Auto", testAuto);
         SmartDashboard.putData("Auto choices", autoChooser);
     }
 
@@ -194,19 +196,14 @@ public class Robot extends TimedRobot {
 
         // SmartDashboard.putNumber("Joint3Raw", Arm.m_Joint3.getEncoder().getPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
-        SmartDashboard.putNumber("Sequence Steps", currentSequence.getLength());
-        SmartDashboard.putNumber("Current Step", currentSequence.currentIndex);
+        // SmartDashboard.putNumber("Sequence Steps", currentSequence.getLength());
+        // SmartDashboard.putNumber("Current Step", currentSequence.currentIndex);
         SmartDashboard.putNumber("Joint 3 Desired Angle", Arm.joint3Angle);
         SmartDashboard.putString("Arm State", String.valueOf(armState));
         SmartDashboard.putBoolean("Brake 1", Arm.joint1Brake.get() == Value.kReverse);
         SmartDashboard.putBoolean("Brake 2", Arm.joint2Brake.get() == Value.kReverse);
 
         SmartDashboard.putBoolean("Compressor", Arm.pmc.getCompressor());
-        SmartDashboard.putNumber("NEO J1 1 (A)", pdp.getCurrent(1));
-        SmartDashboard.putNumber("NEO J1 2 (A)", pdp.getCurrent(2));
-        SmartDashboard.putNumber("NEO J2 (A)", pdp.getCurrent(3));
-
-        SmartDashboard.putString("Arm Ctrl State", String.valueOf(Arm.armControlState));
         SmartDashboard.putBoolean("Arm in Pos", arm.isArmInPosition());
         SmartDashboard.putBoolean("Sequence Finished", currentSequence.sequenceFinished());
 
@@ -218,19 +215,13 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Left Encoder", leftDriveEnc.getQuadraturePosition());
         SmartDashboard.putNumber("Right Encoder", rightDriveEnc.getQuadraturePosition());
 
-        SmartDashboard.putNumber("genPower", odometry.genPower);
-        // SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-        // SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
-        SmartDashboard.putNumber("Drive Error", odometry.error);
-        SmartDashboard.putNumber("Drive Travelled", odometry.distanceTravelled);
-
     }
 
     /** This function is run once each time the robot enters autonomous mode. */
     @Override
     public void autonomousInit() {
-        timer.reset();
-        timer.start();
+        autoTimeoutTimer.reset();
+        autoTimeoutTimer.start();
         isAuto = false;
         autoStep = 1;
 
@@ -251,7 +242,6 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
         double[] powers;
         r_robotDrive.feedWatchdog();
-
         if (autoStep == 1) {
 
             arm.updateArm(-1, 9, 90);
@@ -265,7 +255,7 @@ public class Robot extends TimedRobot {
             arm.updateArm(-1, 9, 90);
 
             powers = odometry.update();
-          
+        
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
@@ -319,7 +309,9 @@ public class Robot extends TimedRobot {
             arm.updateIntake(IntakeState.cubeOpen);
             autoIntakeCounter++;
 
-            if (autoIntakeCounter > 50) {
+            if (autoIntakeCounter > 25) {
+                
+                autoArmCounter = 0;
 
                 autoStep = 6;
                 Odometry.MAX_POWER = 0.55;
@@ -341,7 +333,6 @@ public class Robot extends TimedRobot {
                         odometry.straight(100);
                         break;
                 }
-                autoArmCounter = 0;
 
             }
 
@@ -355,24 +346,21 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
-            mg_rightDrive.set(powers[0]);
-            mg_leftDrive.set(powers[1]);
-
             if (odometry.moveFinished()) {
 
                 autoStep = 7;
                 autoIntakeCounter = 0;
                 
+            } else {
+
+                mg_rightDrive.set(powers[0]);
+                mg_leftDrive.set(powers[1]);
+
             }
 
         } else {
 
-            arm.setJoint1(0);
-            arm.setJoint2(0);
-            arm.setJoint3(0);
-
-            Arm.joint1Brake.set(Value.kReverse);
-            Arm.joint2Brake.set(Value.kReverse);
+            arm.updateArm(0, 9, 90);
         
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
@@ -383,7 +371,7 @@ public class Robot extends TimedRobot {
         }
 
         /* Just for extra protection */
-        if (autoTimeoutTimer.get() > 13.5) {
+        if (autoTimeoutTimer.get() > 14.0) {
 
             Arm.joint1Brake.set(Value.kReverse);
             Arm.joint2Brake.set(Value.kReverse);
@@ -397,6 +385,8 @@ public class Robot extends TimedRobot {
 
             autoTimeoutTimer.stop();
         }
+
+    
 
     }
 
@@ -453,7 +443,8 @@ public class Robot extends TimedRobot {
             armState = ArmState.goFrontHome;
         if (bbRight.getRawButton(6))
             armState = ArmState.goBackHome;
-
+        if (bbRight.getRawButtonPressed(10))
+            armState = ArmState.goHome;
         /* Scoring Positions */
         if (coneControl) {
             /* Claw Control */

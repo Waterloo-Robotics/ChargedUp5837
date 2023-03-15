@@ -22,10 +22,10 @@ public class Odometry {
     /* PID Constants */
     private static double P_general_fwrd = 0.015;
     private static double P_general_turn = 0.001;
-    // private static double P_differential = 0.01;
+    private static double P_differential = 0.00000000000001;
 
     static PIDController genPID = new PIDController(P_general_fwrd, 0, 0);
-    private static PIDController diffPID = new PIDController(P_general_turn, 0, 0);
+    private static PIDController diffPID = new PIDController(P_differential, 0, 0);
 
     /* Speed Constants */
     public static double MAX_POWER = 0.3;
@@ -83,14 +83,18 @@ public class Odometry {
             this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
             this.diffPower = clipPowerStraight(Odometry.diffPID.calculate(differentialError));
 
+            this.rightPower = this.genPower - this.diffPower / 2.0;
+            this.leftPower = this.genPower + this.diffPower / 2.0;
             /* Turn left */
-            if (this.diffPower < 0) {
-                this.leftPower = this.genPower + clip(this.diffPower, this.genPower);
-            } 
-            /* Turn right */
-            else {
-                this.rightPower = this.genPower - clip(this.diffPower, this.genPower);
-            }
+            // if (this.diffPower > 0) {
+            //     this.leftPower = this.genPower - clip(this.diffPower, this.genPower);
+            //     this.rightPower = this.genPower;
+            // } 
+            // /* Turn right */
+            // else {
+            //     this.rightPower = this.genPower + clip(this.diffPower, this.genPower);
+            //     this.leftPower = this.genPower;
+            // }
 
         } else {
 
