@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.io.ObjectInputStream.GetField;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
@@ -75,6 +76,8 @@ public class Robot extends TimedRobot {
     int joint2TimeoutLimit = 15;
     boolean joint2TimeoutEnable = true;
 
+    boolean brake = false;
+
     boolean timeoutOverride = false;
 
     public Arm.ArmState armState = Arm.ArmState.home;
@@ -93,6 +96,9 @@ public class Robot extends TimedRobot {
 
     ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 34, -121);
     ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 41.25, -81);
+
+    ArmPosition conePickupOnSideFront = new ArmPosition(25.5, 3.75, -117);
+    ArmPosition conePickupOnSideBack = new ArmPosition(-25.5, 3.75, -117);
 
     ArmPosition cubePickupFrontGround = new ArmPosition(22, 2, 180);
     ArmPosition cubePickupBackGround = new ArmPosition(-24.5, 2, -10);
@@ -246,7 +252,7 @@ public class Robot extends TimedRobot {
 
             arm.updateArm(-1, 9, 90);
 
-            odometry.straight(26.0);
+            odometry.straight(28.0);
             autoStep = 2;
             autoOdoCounter = 0;
 
@@ -279,7 +285,7 @@ public class Robot extends TimedRobot {
             if (autoArmCounter > 125 || (arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse))) {
                 
                 autoStep = 4;
-                odometry.straight(-25);
+                odometry.straight(-27);
             
             }
 
@@ -321,7 +327,7 @@ public class Robot extends TimedRobot {
                         odometry.straight(0);
                         break;
                     case (rightAuto):
-                        odometry.straight(159);
+                        odometry.straight(25);
                         break;
                     case (leftAuto):
                         odometry.straight(159);
@@ -330,7 +336,7 @@ public class Robot extends TimedRobot {
                         odometry.straight(0);
                         break;
                     case (middleChargeAuto):
-                        odometry.straight(100);
+                        odometry.straight(115);
                         break;
                 }
 
@@ -339,6 +345,11 @@ public class Robot extends TimedRobot {
         } else if (autoStep == 6) {
 
             powers = odometry.update();
+
+            m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+            m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+            m_driveRight1.setNeutralMode(NeutralMode.Brake);
+            m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
             autoArmCounter++;
             if (autoArmCounter > 50) arm.updateArm(0, 9, 90);
@@ -380,6 +391,11 @@ public class Robot extends TimedRobot {
             arm.setJoint2(0);
             arm.setJoint3(0);
 
+            m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+            m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+            m_driveRight1.setNeutralMode(NeutralMode.Brake);
+            m_driveRight2.setNeutralMode(NeutralMode.Brake);
+
             mg_rightDrive.set(0);
             mg_leftDrive.set(0);
 
@@ -395,6 +411,11 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+
+        m_driveLeft1.setNeutralMode(NeutralMode.Coast);
+        m_driveLeft2.setNeutralMode(NeutralMode.Coast);
+        m_driveRight1.setNeutralMode(NeutralMode.Coast);
+        m_driveRight2.setNeutralMode(NeutralMode.Coast);
 
         isAuto = false;
         currentArmPosition.setCoordinates(0, 9, 90);
@@ -445,6 +466,11 @@ public class Robot extends TimedRobot {
             armState = ArmState.goBackHome;
         if (bbRight.getRawButtonPressed(10))
             armState = ArmState.goHome;
+
+        if (bbRight.getRawButtonPressed(7))
+            armState = ArmState.goConePickupOnSideFront;
+        if (bbRight.getRawButtonPressed(8))
+            armState = ArmState.goConePickupOnSideBack;
         /* Scoring Positions */
         if (coneControl) {
             /* Claw Control */
@@ -531,6 +557,18 @@ public class Robot extends TimedRobot {
 
         /* Command arm to go to different positions */
         switch (armState) {
+
+            case goConePickupOnSideFront:
+                desiredArmPosition = conePickupOnSideFront;
+                Arm.armControlState = ArmControlState.newPath;
+                armState = ArmState.conePickupOnSideFront;
+                break;
+
+            case goConePickupOnSideBack:
+                desiredArmPosition = conePickupOnSideBack;
+                Arm.armControlState = ArmControlState.newPath;
+                armState = ArmState.conePickupOnSideBack;
+                break;
 
             case goConePickupFrontGround:
                 desiredArmPosition = conePickupFrontGround;
@@ -677,6 +715,28 @@ public class Robot extends TimedRobot {
         /* If Inverse Kinematic PID Control is enabled */
         if (isAuto) {
             double fbSpeed = 0;
+
+            if (c_controller.getStartButtonPressed()) {
+
+                brake = !brake;
+
+                if (brake) {
+    
+                    m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+                    m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+                    m_driveRight1.setNeutralMode(NeutralMode.Brake);
+                    m_driveRight2.setNeutralMode(NeutralMode.Brake);
+                
+                } else {
+    
+                    m_driveLeft1.setNeutralMode(NeutralMode.Coast);
+                    m_driveLeft2.setNeutralMode(NeutralMode.Coast);
+                    m_driveRight1.setNeutralMode(NeutralMode.Coast);
+                    m_driveRight2.setNeutralMode(NeutralMode.Coast);
+                
+                }
+
+            }
 
             if (c_controller.getPOV() == 0)
                 fbSpeed = -0.45;
@@ -872,10 +932,10 @@ public class Robot extends TimedRobot {
     @Override
     public void testPeriodic() {
 
-        if (bbRight.getRawButton(1))
-            leftDriveEnc.setQuadraturePosition(0, 0);
-        if (bbRight.getRawButton(4))
-            rightDriveEnc.setQuadraturePosition(0, 0);
+        // if (bbRight.getRawButton(1))
+        //     leftDriveEnc.setQuadraturePosition(0, 0);
+        // if (bbRight.getRawButton(4))
+            // rightDriveEnc.setQuadraturePosition(0, 0);
 
     }
 

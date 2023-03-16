@@ -44,6 +44,8 @@ public class Arm {
         goConePickupBackGround, conePickupBackGround,
         goConePickupFrontShelf, conePickupFrontShelf,
         goConePickupBackShelf , conePickupBackShelf,
+        goConePickupOnSideFront, conePickupOnSideFront,
+        goConePickupOnSideBack, conePickupOnSideBack,
         /* Cube Pickups */
         goCubePickupFrontGround , cubePickupFrontGround,
         goCubePickupBackGround , cubePickupBackGround,
@@ -518,14 +520,14 @@ public class Arm {
     public double joint1CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 284.0;
+        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 290.0;
 
     }
 
     public double joint2CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 211.734;
+        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 246.35;
 
     }
 

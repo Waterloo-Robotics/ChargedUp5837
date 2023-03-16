@@ -1,5 +1,29 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Desired Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="8" y="15"/>
+	</widget>
+	<widget field="Current Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="19" y="20"/>
+	</widget>
+	<widget field="joint2Setpoint" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="9" y="7"/>
+	</widget>
+	<widget field="y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="740" y="350"/>
+	</widget>
+	<widget field="x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="740" y="329"/>
+	</widget>
+	<widget field="arm2XDist Dist" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="11" y="16"/>
+	</widget>
+	<widget field="arm1XDist Dist" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="405" y="437"/>
+	</widget>
+	<widget field="Limelight_Interface" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="394" y="416"/>
+	</widget>
 	<widget field="Auto choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
 		<location x="567" y="39"/>
 	</widget>
@@ -244,5 +268,4 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="Limelight_Interface"/>
 </xml>
