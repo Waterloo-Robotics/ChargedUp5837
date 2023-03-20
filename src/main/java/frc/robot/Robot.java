@@ -20,9 +20,11 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-// import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
+import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
+import edu.wpi.first.wpilibj.ADIS16448_IMU;
+import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-// import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -82,7 +84,7 @@ public class Robot extends TimedRobot {
 
     public Arm.ArmState armState = Arm.ArmState.home;
     public Arm.IntakeState intakeState = IntakeState.cubeOpen;
-    // ADIS16470_IMU imu = new ADIS16470_IMU();
+    ADIS16470_IMU imu = new ADIS16470_IMU();
 
     boolean coneControl, front = true;
 
@@ -221,6 +223,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Left Encoder", leftDriveEnc.getQuadraturePosition());
         SmartDashboard.putNumber("Right Encoder", rightDriveEnc.getQuadraturePosition());
 
+        SmartDashboard.putNumber("Auto Step", autoStep);
+
+        SmartDashboard.putNumber("IMU Axis", imu.getAngle());
+
     }
 
     /** This function is run once each time the robot enters autonomous mode. */
@@ -255,6 +261,7 @@ public class Robot extends TimedRobot {
             odometry.straight(28.0);
             autoStep = 2;
             autoOdoCounter = 0;
+            autoArmCounter = 0;
 
         } else if (autoStep == 2) {
 
@@ -265,11 +272,12 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
+            autoArmCounter++;
             mg_rightDrive.set(powers[0]);
             mg_leftDrive.set(powers[1]);
 
-            if (Math.abs(Odometry.genPID.getPositionError()) < 4) autoOdoCounter++;
-            if ((odometry.moveFinished() || autoOdoCounter > 125) && arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) {
+            if (Math.abs(Odometry.genPID.getPositionError()) < 6) autoOdoCounter++;
+            if ((odometry.moveFinished() || autoOdoCounter > 125) && ((arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) || autoArmCounter > 100)) {
 
                 autoStep = 3;
                 autoArmCounter = 0;
@@ -282,7 +290,7 @@ public class Robot extends TimedRobot {
 
             autoArmCounter++;
 
-            if (autoArmCounter > 125 || (arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse))) {
+            if (autoArmCounter > 125 || (arm.isArmInPosition())) {
                 
                 autoStep = 4;
                 odometry.straight(-27);
@@ -320,7 +328,7 @@ public class Robot extends TimedRobot {
                 autoArmCounter = 0;
 
                 autoStep = 6;
-                Odometry.MAX_POWER = 0.55;
+                Odometry.MAX_POWER = 0.4;
 
                 switch (autoSelected) {
                     case (defaultAuto):
@@ -333,10 +341,10 @@ public class Robot extends TimedRobot {
                         odometry.straight(159);
                         break;
                     case (middleAuto):
-                        odometry.straight(0);
+                        odometry.straight(10);
                         break;
                     case (middleChargeAuto):
-                        odometry.straight(115);
+                        odometry.straight(111.5);
                         break;
                 }
 
@@ -352,10 +360,14 @@ public class Robot extends TimedRobot {
             m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
             autoArmCounter++;
-            if (autoArmCounter > 50) arm.updateArm(0, 9, 90);
+            if (autoArmCounter > 25) arm.updateArm(0, 9, 90);
         
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+
+            mg_rightDrive.set(powers[0]);
+            mg_leftDrive.set(powers[1]);
+
 
             if (odometry.moveFinished()) {
 
@@ -364,9 +376,7 @@ public class Robot extends TimedRobot {
                 
             } else {
 
-                mg_rightDrive.set(powers[0]);
-                mg_leftDrive.set(powers[1]);
-
+             
             }
 
         } else {
@@ -376,31 +386,33 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
             SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
-            mg_rightDrive.set(0);
-            mg_leftDrive.set(0);
+            powers = odometry.update();
+
+            mg_rightDrive.set(powers[0]);
+            mg_leftDrive.set(powers[1]);
             
         }
 
         /* Just for extra protection */
-        if (autoTimeoutTimer.get() > 14.0) {
+        // if (autoTimeoutTimer.get() > 14.0) {
 
-            Arm.joint1Brake.set(Value.kReverse);
-            Arm.joint2Brake.set(Value.kReverse);
+        //     Arm.joint1Brake.set(Value.kReverse);
+        //     Arm.joint2Brake.set(Value.kReverse);
 
-            arm.setJoint1(0);
-            arm.setJoint2(0);
-            arm.setJoint3(0);
+        //     arm.setJoint1(0);
+        //     arm.setJoint2(0);
+        //     arm.setJoint3(0);
 
-            m_driveLeft1.setNeutralMode(NeutralMode.Brake);
-            m_driveLeft2.setNeutralMode(NeutralMode.Brake);
-            m_driveRight1.setNeutralMode(NeutralMode.Brake);
-            m_driveRight2.setNeutralMode(NeutralMode.Brake);
+        //     m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+        //     m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+        //     m_driveRight1.setNeutralMode(NeutralMode.Brake);
+        //     m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
-            mg_rightDrive.set(0);
-            mg_leftDrive.set(0);
+        //     mg_rightDrive.set(0);
+        //     mg_leftDrive.set(0);
 
-            autoTimeoutTimer.stop();
-        }
+        //     autoTimeoutTimer.stop();
+        // }
 
     
 

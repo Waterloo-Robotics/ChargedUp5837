@@ -1,22 +1,10 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="Desired Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="8" y="15"/>
-	</widget>
-	<widget field="Current Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="19" y="20"/>
-	</widget>
-	<widget field="joint2Setpoint" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="9" y="7"/>
-	</widget>
 	<widget field="y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="740" y="350"/>
 	</widget>
 	<widget field="x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="740" y="329"/>
-	</widget>
-	<widget field="arm2XDist Dist" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="11" y="16"/>
 	</widget>
 	<widget field="arm1XDist Dist" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="405" y="437"/>
@@ -265,7 +253,59 @@
 		<property name="Upper Limit" value="120.0"/>
 		<property name="Lower Limit" value="-120.0"/>
 	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="894" y="130"/>
+		<width>446</width>
+		<height>342</height>
+		<property name="Camera Choice" value=""/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="460" y="186"/>
+		<property name="Text" value="Joint 3 Desired Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="874" y="59"/>
+		<width>69</width>
+		<height>49</height>
+		<property name="Text" value="VALID"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="474" y="359"/>
+		<property name="Text" value="Joint 3 Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="276" y="356"/>
+		<property name="Text" value="Joint 2 Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="83" y="355"/>
+		<property name="Text" value="Joint 1 Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="260" y="182"/>
+		<property name="Text" value="Joint 2 Desired Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="66" y="184"/>
+		<property name="Text" value="Joint 1 Desired Angle"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="569" y="9"/>
+		<width>170</width>
+		<height>16</height>
+		<property name="Text" value="ROBOT CONNECTION STATUS"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
+		<location x="2" y="1"/>
+		<width>1356</width>
+		<height>35</height>
+		<property name="Graphics" value="Rounded"/>
+	</static-widget>
 </dashboard>
 <live-window>
 </live-window>
+	<hidden field="arm2XDist Dist"/>
+	<hidden field="joint2Setpoint"/>
+	<hidden field="Desired Side"/>
+	<hidden field="Current Side"/>
 </xml>

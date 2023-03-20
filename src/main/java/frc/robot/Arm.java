@@ -520,14 +520,14 @@ public class Arm {
     public double joint1CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 290.0;
+        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 278.341 + 14.4;
 
     }
 
     public double joint2CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 246.35;
+        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 247.85;
 
     }
 

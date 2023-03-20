@@ -176,6 +176,38 @@ public class Odometry {
         genPID.setSetpoint(inches);
     }
 
+    public double[] balance(double currentAngle, double currentAccel) {
+
+        double[] powers = new double[2];
+
+        // if charge station starts changing balance (robot detects change in angle) stop movement
+        if (Math.abs(currentAccel) > 0.1) {
+
+            powers[0] = 0;
+            powers[1] = 0;
+
+        } else {
+
+            // make sure charge station isn't balanced before applying power;
+            if (Math.abs(currentAngle) < 2) {
+
+                // insert code to drive and stuff
+                powers[0] = clip(0.05 * Math.signum(currentAngle), MAX_POWER);
+                powers[1] = clip(0.05 * Math.signum(currentAngle), MAX_POWER);
+
+            } else {
+
+                powers[0] = 0;
+                powers[1] = 0;
+
+            }
+
+        }
+
+        return powers;
+
+    }
+
     private static double toInches(double encoderCount) {
 
         return (encoderCount / Odometry.countsPerRev) * Odometry.gearRatio * Odometry.wheelCircumference;
