@@ -110,11 +110,9 @@ public class Arm {
     PIDController joint2PID = new PIDController(joint2kP_base, joint2kI, joint2kD);
 
 
-    double joint3kP = 0.004;
+    double joint3kP = 0.0035;
     double joint3kI = 0;
-    double joint3kD = 0.001;
-
-
+    double joint3kD = 0.000;
     PIDController joint3PID = new PIDController(joint3kP, joint3kI, joint3kD);
 
     public Arm(WPI_TalonSRX joint1EncoderTalon, WPI_TalonSRX joint2EncoderTalon) {
@@ -208,15 +206,7 @@ public class Arm {
 
         armCoordinates[0] = x;
         armCoordinates[1] = y;
-        // System.out.println("x1: " + x1);
-        // System.out.println("y1: " + y1);
-        // System.out.println("x2: " + x2);
-        // System.out.println("y2: " + y2);
-
-
-        //  System.out.println("Current x: " + x);
-
-        //  System.out.println("Current y: " + y);
+        
 
        SmartDashboard.putNumber("Current x", x);
        SmartDashboard.putNumber("Current y", y);
@@ -240,7 +230,7 @@ public class Arm {
     }
 
     // double x, y = 0;
-    double joint1Pos, joint2Pos, joint2SetPoint = 0;
+    public double joint1Pos, joint2Pos, joint2SetPoint = 0;
     double joint1Speed, joint2Speed = 0;
     public static double lastValidX = 0;
     public static double lastValidY = 0;
@@ -314,18 +304,6 @@ public class Arm {
 
         SmartDashboard.putNumber("x", x);
         SmartDashboard.putNumber("y", y);
-        SmartDashboard.putNumber("joint1Angle", Math.toDegrees(joint1Angle));
-        SmartDashboard.putNumber("joint2Angle", Math.toDegrees(joint2Angle));
-        SmartDashboard.putNumber("joint2Setpoint", Math.toDegrees(joint2SetPoint));
-        SmartDashboard.putNumber("Joint 1 Power", mg_Joint1.get());
-        SmartDashboard.putNumber("Joint 2 Power", m_Joint2.get());
-        SmartDashboard.putNumber("Joint 1 Error", joint1PID.getPositionError());
-        SmartDashboard.putNumber("Joint 2 Error", joint2PID.getPositionError());
-
-        //  joint1Pos = joint1Enc.get() * 2 * Math.PI;
-//    joint2Pos = joint2Enc.get() * 2 * Math.PI;
-
-//     m_Joint2.set(joint2Speed);
 
     }
 
@@ -441,6 +419,13 @@ public class Arm {
         joint3Angle = angle;
         joint3PID.setSetpoint(angle);
         joint3Speed = joint3PID.calculate(joint3CurrentPosition());
+
+        if (Math.abs(joint3PID.getPositionError()) > 5) {
+            if (Math.abs(joint3Speed) < 0.05) {
+                joint3Speed = Math.signum(joint3Speed) * 0.05;
+            }
+        }
+
         setJoint3(joint3Speed);
 
     }
@@ -464,9 +449,6 @@ public class Arm {
             joint1Speed = power;
 
         }
-
-        // if (joint1Brake.get() == Value.kReverse)
-        // { joint1Speed = 0; }
 
         mg_Joint1.set(joint1Speed);
     }

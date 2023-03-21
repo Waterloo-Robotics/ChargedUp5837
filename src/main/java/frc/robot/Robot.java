@@ -72,10 +72,10 @@ public class Robot extends TimedRobot {
 
     Arm arm = new Arm(m_driveLeft2, m_driveRight2);
     int joint1Timeout;
-    int joint1TimeoutLimit = 15;
+    int joint1TimeoutLimit = 75;
     boolean joint1TimeoutEnable = true;
     int joint2Timeout;
-    int joint2TimeoutLimit = 15;
+    int joint2TimeoutLimit = 75;
     boolean joint2TimeoutEnable = true;
 
     boolean brake = false;
@@ -93,25 +93,25 @@ public class Robot extends TimedRobot {
     ArmPosition homeBack = new ArmPosition(-16, 9, 90);
 
     /* Pickup Positions */
-    ArmPosition conePickupFrontGround = new ArmPosition(22, 2, 180);
-    ArmPosition conePickupBackGround = new ArmPosition(-24.5, 2, -10);
+    ArmPosition conePickupFrontGround = new ArmPosition(22, 2.75, 225);
+    ArmPosition conePickupBackGround = new ArmPosition(-24.5, 0, -10);
 
     ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 34, -121);
-    ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 41.25, -81);
+    ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 43, -81);
 
     ArmPosition conePickupOnSideFront = new ArmPosition(25.5, 3.75, -117);
     ArmPosition conePickupOnSideBack = new ArmPosition(-25.5, 3.75, -117);
 
-    ArmPosition cubePickupFrontGround = new ArmPosition(22, 2, 180);
-    ArmPosition cubePickupBackGround = new ArmPosition(-24.5, 2, -10);
+    ArmPosition cubePickupFrontGround = new ArmPosition(22, 2.75, 255);
+    ArmPosition cubePickupBackGround = new ArmPosition(-24.5, 0, -10);
 
     ArmPosition cubePickupFrontShelf = new ArmPosition(33.5, 34, -121);
-    ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 41.25, -81);
+    ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 43, -81);
 
     /* Cone Scoring Positions */
     ArmPosition coneScoreFrontLow = new ArmPosition(30, 1, 225);
     ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 39.25, -130);
-    ArmPosition coneScoreFrontHigh = new ArmPosition(48.75, 53, -112);
+    ArmPosition coneScoreFrontHigh = new ArmPosition(48.75, 45, -112);
 
     ArmPosition coneScoreBackLow = new ArmPosition(-21, 3, 41);
     ArmPosition coneScoreBackMiddle = new ArmPosition(-41, 37.5, -39);
@@ -160,6 +160,13 @@ public class Robot extends TimedRobot {
     private String autoSelected;
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
+    private static final String cubeAuto = "Cube Auto";
+    private static final String coneAuto = "Cone Auto";
+    private String autoGamePiece;
+    private final SendableChooser<String> gamePieceChooser = new SendableChooser<>();
+
+
+
     /**
      * This function is run when the robot is first started up and should be used
      * for any
@@ -169,7 +176,8 @@ public class Robot extends TimedRobot {
     public void robotInit() {
 
         Arm.m_Joint3.getEncoder().setPosition(24);
-        // imu.calibrate();
+        imu.calibrate();
+        imu.setYawAxis(ADIS16470_IMU.IMUAxis.kX);
         // We need to invert one side of the drivetrain so that positive voltages
         // result in both sides moving forward. Depending on how your robot's
         // gearbox is constructed, you might have to invert the left side instead.
@@ -196,34 +204,59 @@ public class Robot extends TimedRobot {
         autoChooser.addOption("Middle Charge Auto", middleChargeAuto);
         autoChooser.addOption("Test Auto", testAuto);
         SmartDashboard.putData("Auto choices", autoChooser);
+
+        gamePieceChooser.setDefaultOption("Cube Auto", cubeAuto);
+        gamePieceChooser.addOption("Cone Auto", coneAuto);
+        SmartDashboard.putData("Game Piece", gamePieceChooser);
+
     }
 
     public void robotPeriodic() {
+        /************ Arm Smart Dashboard ************/
+        /* Current Angles */
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
-
-        // SmartDashboard.putNumber("Joint3Raw", Arm.m_Joint3.getEncoder().getPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
-        // SmartDashboard.putNumber("Sequence Steps", currentSequence.getLength());
-        // SmartDashboard.putNumber("Current Step", currentSequence.currentIndex);
+
+        /* Desired Angles */
+        SmartDashboard.putNumber("joint1Angle", Math.toDegrees(Arm.joint1Angle));
+        SmartDashboard.putNumber("joint2Angle", Math.toDegrees(arm.joint2SetPoint));
         SmartDashboard.putNumber("Joint 3 Desired Angle", Arm.joint3Angle);
+
+        /* PID Error */
+        SmartDashboard.putNumber("Joint 1 Error", arm.joint1PID.getPositionError());
+        SmartDashboard.putNumber("Joint 2 Error", arm.joint2PID.getPositionError());
+
         SmartDashboard.putString("Arm State", String.valueOf(armState));
         SmartDashboard.putBoolean("Brake 1", Arm.joint1Brake.get() == Value.kReverse);
         SmartDashboard.putBoolean("Brake 2", Arm.joint2Brake.get() == Value.kReverse);
-
-        SmartDashboard.putBoolean("Compressor", Arm.pmc.getCompressor());
+        
+        /* In Position */
         SmartDashboard.putBoolean("Arm in Pos", arm.isArmInPosition());
-        SmartDashboard.putBoolean("Sequence Finished", currentSequence.sequenceFinished());
+        SmartDashboard.putBoolean("Is joint 1 at position", arm.isJoint1AtPosition());
+        SmartDashboard.putBoolean("Is joint 2 at position", arm.isJoint2AtPosition());
 
+        SmartDashboard.putBoolean("Auto Status", isAuto);
+        
+        SmartDashboard.putNumber("Sequence Step", currentSequence.currentIndex);
+        SmartDashboard.putNumber("Num Steps", currentSequence.getLength());
+        SmartDashboard.putBoolean("Sequence Finished", currentSequence.sequenceFinished());
+        SmartDashboard.putNumber("Auto Step", autoStep);
+        SmartDashboard.putBoolean("Timeout Override", timeoutOverride);
+
+        /* Update Smart Dashboard with valid X & Y */
+        SmartDashboard.putNumber("Valid x", currentArmPosition.x);
+        SmartDashboard.putNumber("Valid y", currentArmPosition.y);
+
+        /* Timeouts */
         SmartDashboard.putBoolean("J1 Timeout En", joint1TimeoutEnable);
         SmartDashboard.putNumber("J1 Timeout", joint1Timeout);
         SmartDashboard.putBoolean("J2 Timeout En", joint2TimeoutEnable);
         SmartDashboard.putNumber("J2 Timeout", joint2Timeout);
 
-        SmartDashboard.putNumber("Left Encoder", leftDriveEnc.getQuadraturePosition());
-        SmartDashboard.putNumber("Right Encoder", rightDriveEnc.getQuadraturePosition());
 
-        SmartDashboard.putNumber("Auto Step", autoStep);
+        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
         SmartDashboard.putNumber("IMU Axis", imu.getAngle());
 
@@ -239,14 +272,16 @@ public class Robot extends TimedRobot {
 
         arm.updateIntake(IntakeState.cubeClosed);
 
-        m_driveLeft1.configOpenloopRamp(1);
-        m_driveLeft2.configOpenloopRamp(1);
-        m_driveRight1.configOpenloopRamp(1);
-        m_driveRight2.configOpenloopRamp(1);
+        m_driveLeft1.configOpenloopRamp(0.75);
+        m_driveLeft2.configOpenloopRamp(0.75);
+        m_driveRight1.configOpenloopRamp(0.75);
+        m_driveRight2.configOpenloopRamp(0.75);
 
-        Odometry.MAX_POWER = 0.3;
+        Odometry.MAX_POWER = 0.35;
 
         autoSelected = autoChooser.getSelected();
+        autoGamePiece = gamePieceChooser.getSelected();
+
     }
 
     /** This function is called periodically during autonomous. */
@@ -265,12 +300,17 @@ public class Robot extends TimedRobot {
 
         } else if (autoStep == 2) {
 
-            arm.updateArm(-1, 9, 90);
+            if (odometry.distanceTravelled > 20) {
+                if (autoGamePiece == coneAuto) {
+                    arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+                } else {
+                    arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+                }
+            } else {
+                arm.updateArm(-1, 9, 90);
+            }
 
             powers = odometry.update();
-        
-            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             autoArmCounter++;
             mg_rightDrive.set(powers[0]);
@@ -286,7 +326,11 @@ public class Robot extends TimedRobot {
             
         } else if (autoStep == 3) {
 
-            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            if (autoGamePiece == coneAuto) {
+                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+            } else {
+                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            }
 
             autoArmCounter++;
 
@@ -294,17 +338,19 @@ public class Robot extends TimedRobot {
                 
                 autoStep = 4;
                 odometry.straight(-27);
+                Odometry.MAX_POWER = 0.40;
             
             }
 
         } else if (autoStep == 4) {
 
-            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            if (autoGamePiece == coneAuto) {
+                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+            } else {
+                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            }
 
             powers = odometry.update();
-
-            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             mg_rightDrive.set(powers[0]);
             mg_leftDrive.set(powers[1]);
@@ -318,7 +364,11 @@ public class Robot extends TimedRobot {
 
         } else if (autoStep == 5) {
 
-            arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            if (autoGamePiece == coneAuto) {
+                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+            } else {
+                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+            }
 
             arm.updateIntake(IntakeState.cubeOpen);
             autoIntakeCounter++;
@@ -328,7 +378,7 @@ public class Robot extends TimedRobot {
                 autoArmCounter = 0;
 
                 autoStep = 6;
-                Odometry.MAX_POWER = 0.4;
+                Odometry.MAX_POWER = 65;
 
                 switch (autoSelected) {
                     case (defaultAuto):
@@ -361,9 +411,6 @@ public class Robot extends TimedRobot {
 
             autoArmCounter++;
             if (autoArmCounter > 25) arm.updateArm(0, 9, 90);
-        
-            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
             mg_rightDrive.set(powers[0]);
             mg_leftDrive.set(powers[1]);
@@ -383,8 +430,7 @@ public class Robot extends TimedRobot {
 
             arm.updateArm(0, 9, 90);
         
-            SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-            SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+            
 
             powers = odometry.update();
 
@@ -394,25 +440,25 @@ public class Robot extends TimedRobot {
         }
 
         /* Just for extra protection */
-        // if (autoTimeoutTimer.get() > 14.0) {
+        if (autoTimeoutTimer.get() > 14.5) {
 
-        //     Arm.joint1Brake.set(Value.kReverse);
-        //     Arm.joint2Brake.set(Value.kReverse);
+            Arm.joint1Brake.set(Value.kReverse);
+            Arm.joint2Brake.set(Value.kReverse);
 
-        //     arm.setJoint1(0);
-        //     arm.setJoint2(0);
-        //     arm.setJoint3(0);
+            // arm.setJoint1(0);
+            // arm.setJoint2(0);
+            // arm.setJoint3(0);
 
-        //     m_driveLeft1.setNeutralMode(NeutralMode.Brake);
-        //     m_driveLeft2.setNeutralMode(NeutralMode.Brake);
-        //     m_driveRight1.setNeutralMode(NeutralMode.Brake);
-        //     m_driveRight2.setNeutralMode(NeutralMode.Brake);
+            // m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+            // m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+            // m_driveRight1.setNeutralMode(NeutralMode.Brake);
+            // m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
-        //     mg_rightDrive.set(0);
-        //     mg_leftDrive.set(0);
+            // mg_rightDrive.set(0);
+            // mg_leftDrive.set(0);
 
-        //     autoTimeoutTimer.stop();
-        // }
+            autoTimeoutTimer.stop();
+        }
 
     
 
@@ -430,9 +476,12 @@ public class Robot extends TimedRobot {
         m_driveRight2.setNeutralMode(NeutralMode.Coast);
 
         isAuto = false;
-        currentArmPosition.setCoordinates(0, 9, 90);
+        // currentArmPosition.setCoordinates(0, 9, 90);
+        double[] armCoordinates = Arm.getArmCoordinates(arm.joint1CurrentPosition(), arm.joint2CurrentPosition());
+        currentArmPosition.setCoordinates(armCoordinates[0], armCoordinates[1], arm.joint3CurrentPosition());
         arm.joint1PID.reset();
         arm.joint2PID.reset();
+        arm.joint3PID.reset();
 
         m_driveLeft1.configOpenloopRamp(0.25);
         m_driveLeft2.configOpenloopRamp(0.25);
@@ -562,7 +611,7 @@ public class Robot extends TimedRobot {
         /* Enable Inverse Kinematic PID Control of arm */
         if (c_controller.getBackButtonPressed()) {
             // currentArmPosition.setCoordinates(0, 9, 0);
-            currentArmPosition = new ArmPosition(home);
+            // currentArmPosition = new ArmPosition(home);
             armState = ArmState.home;
             isAuto = !isAuto;
         }
@@ -812,19 +861,15 @@ public class Robot extends TimedRobot {
                 }
             }
 
-            /* Update SmartDashboard with attempted X & Y */
-            SmartDashboard.putBoolean("Is Valid", arm.isArmPositionValid(currentArmPosition.x, currentArmPosition.y));
-            SmartDashboard.putNumber("Attempted x", currentArmPosition.x);
-            SmartDashboard.putNumber("Attempted y", currentArmPosition.y);
-
-            SmartDashboard.putBoolean("Check 1", (Arm.c <= (Arm.a + Arm.b)));
-            SmartDashboard.putBoolean("Check 2", (Arm.c >= (Arm.b - Arm.a)));
-            SmartDashboard.putBoolean("Check 3",
-                    ((Math.toDegrees(Arm.joint1Angle) <= 60) && (Math.toDegrees(Arm.joint1Angle) >= -60)));
-            SmartDashboard.putBoolean("Check 4",
-                    ((Math.toDegrees(Arm.joint2Angle) <= 150) && (Math.toDegrees(Arm.joint2Angle) >= -150)));
-            SmartDashboard.putBoolean("Check 5", (currentArmPosition.y <= 70.5));
-            SmartDashboard.putBoolean("Check 6", (currentArmPosition.x <= 63.0 && currentArmPosition.x >= -63.0));
+            /* Arm Checks */
+            // SmartDashboard.putBoolean("Check 1", (Arm.c <= (Arm.a + Arm.b)));
+            // SmartDashboard.putBoolean("Check 2", (Arm.c >= (Arm.b - Arm.a)));
+            // SmartDashboard.putBoolean("Check 3",
+            //         ((Math.toDegrees(Arm.joint1Angle) <= 60) && (Math.toDegrees(Arm.joint1Angle) >= -60)));
+            // SmartDashboard.putBoolean("Check 4",
+            //         ((Math.toDegrees(Arm.joint2Angle) <= 150) && (Math.toDegrees(Arm.joint2Angle) >= -150)));
+            // SmartDashboard.putBoolean("Check 5", (currentArmPosition.y <= 70.5));
+            // SmartDashboard.putBoolean("Check 6", (currentArmPosition.x <= 63.0 && currentArmPosition.x >= -63.0));
 
             /* If attempted arm position is invalid during manual control */
             if (!arm.isArmPositionValid(currentArmPosition.x, currentArmPosition.y) && armState == ArmState.manual) {
@@ -838,9 +883,7 @@ public class Robot extends TimedRobot {
                 Arm.lastValidY = currentArmPosition.y;
             }
 
-            /* Update Smart Dashboard with valid X & Y */
-            SmartDashboard.putNumber("Valid x", currentArmPosition.x);
-            SmartDashboard.putNumber("Valid y", currentArmPosition.y);
+            
             /*************************************************************************************
              * END X & Y MANUAL CONTROL
              *************************************************************************************/
@@ -863,23 +906,31 @@ public class Robot extends TimedRobot {
                  * Create a new sequence to move from currentArmPosition to desiredArmPosition
                  */
                 currentSequence = pathPlanner.planPath(new ArmPosition(currentArmPosition),
-                        new ArmPosition(desiredArmPosition));
+                                                       new ArmPosition(desiredArmPosition));
 
                 joint1TimeoutEnable = true;
                 joint2TimeoutEnable = true;
+                joint1Timeout = 0;
+                joint2Timeout = 0;
                 timeoutOverride = false;
+
+                currentArmPosition = new ArmPosition(currentSequence.nextPosition());
             }
 
             /* If the arm is in the middle of a sequence */
             else if (Arm.armControlState == ArmControlState.runningPath) {
 
                 /* Next position and path finished */
-                if ((arm.isArmInPosition() || timeoutOverride) && !currentSequence.sequenceFinished()) {
+                if ((arm.isArmInPosition() || (timeoutOverride && arm.isJoint3AtPosition())) && !currentSequence.sequenceFinished()) {
                     timeoutOverride = false;
                     /* set currentArmPosition to next position in the sequence */
-                    currentArmPosition = currentSequence.nextPosition();
+                    currentArmPosition = new ArmPosition(currentSequence.nextPosition());
                     joint1TimeoutEnable = true;
                     joint2TimeoutEnable = true;
+
+                    /* mighta been it */
+                    joint1Timeout = 0;
+                    joint2Timeout = 0;
                 }
                 /* If the arm is in position and the sequence is finished */
                 else if (arm.isArmInPosition() && currentSequence.sequenceFinished()) {
@@ -888,17 +939,19 @@ public class Robot extends TimedRobot {
                 }
 
                 /* Arm position timeouts */
-                if (!arm.isJoint1AtPosition() && joint1TimeoutEnable && joint1Timeout <= joint1TimeoutLimit) {
+                if ((!arm.isJoint1AtPosition()) && joint1TimeoutEnable && (joint1Timeout <= joint1TimeoutLimit)) {
                     joint1Timeout++;
                 }
 
-                if (!arm.isJoint2AtPosition() && joint2TimeoutEnable && joint2Timeout <= joint2TimeoutLimit) {
+                if ((!arm.isJoint2AtPosition()) && joint2TimeoutEnable && (joint2Timeout <= joint2TimeoutLimit)) {
                     joint2Timeout++;
                 }
 
                 /* Service timeouts */
-                if ((joint1Timeout > joint1TimeoutLimit || arm.isJoint1AtPosition()) &&
-                        (joint2Timeout > joint2TimeoutLimit || arm.isJoint2AtPosition())) {
+                if ( (joint1Timeout > joint1TimeoutLimit && joint2Timeout > joint2TimeoutLimit) ||
+                     ( joint1Timeout > joint1TimeoutLimit && arm.isJoint2AtPosition()) || 
+                     ( joint2Timeout > joint2TimeoutLimit && arm.isJoint1AtPosition())) 
+                {
                     timeoutOverride = true;
 
                     /* Reset timeouts */
@@ -928,10 +981,6 @@ public class Robot extends TimedRobot {
             arm.setJoint2(deadZone(c_controller.getRightX()) * 0.075);
 
         }
-
-        SmartDashboard.putBoolean("Is joint 1 at position", arm.isJoint1AtPosition());
-        SmartDashboard.putBoolean("Is joint 2 at position", arm.isJoint2AtPosition());
-        SmartDashboard.putBoolean("Auto Status", isAuto);
 
     }
 

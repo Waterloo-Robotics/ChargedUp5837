@@ -31,7 +31,7 @@ public class ArmPathPlanner {
         SmartDashboard.putNumber("Desired Pos", desiredArmPosition.x);
 
         /* Add current position as first stop */
-        path.addPosition(new ArmPosition(currentArmPosition));
+        // path.addPosition(new ArmPosition(currentArmPosition));
 
         /* If currently in Front */
         if (currentSide == 1) {
