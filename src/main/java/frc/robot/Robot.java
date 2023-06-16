@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.io.ObjectInputStream.GetField;
-
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -20,11 +18,8 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
-import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -58,8 +53,8 @@ public class Robot extends TimedRobot {
 
     /* Driver Input */
     final static XboxController c_controller = new XboxController(1);
-    Joystick bbRight = new Joystick(3);
-    Joystick bbLeft = new Joystick(2);
+    Joystick farmSim1 = new Joystick(4);
+    Joystick farmSim2 = new Joystick(5);
     private final Timer timer = new Timer();
 
     public static SensorCollection Joint1Enc = m_driveLeft2.getSensorCollection();
@@ -514,23 +509,23 @@ public class Robot extends TimedRobot {
         /* Claw States */
 
         /* Switch between Cone and Cube */
-        if (bbLeft.getRawButton(9)) {
+        if (farmSim2.getRawButton(6)) {
             coneControl = true;
-        } else if (bbLeft.getRawButton(10)) {
+        } else if (farmSim2.getRawButton(7)) {
             coneControl = false;
         }
 
         /* Home Control */
-        if (bbRight.getRawButton(3))
+        if (farmSim1.getRawButton(9))
             armState = ArmState.goFrontHome;
-        if (bbRight.getRawButton(6))
+        if (farmSim1.getRawButton(10))
             armState = ArmState.goBackHome;
-        if (bbRight.getRawButtonPressed(10))
+        if (farmSim2.getRawButtonPressed(5))
             armState = ArmState.goHome;
 
-        if (bbRight.getRawButtonPressed(7))
+        if (farmSim2.getRawButtonPressed(3))
             armState = ArmState.goConePickupOnSideFront;
-        if (bbRight.getRawButtonPressed(8))
+        if (farmSim2.getRawButtonPressed(4))
             armState = ArmState.goConePickupOnSideBack;
         /* Scoring Positions */
         if (coneControl) {
@@ -547,29 +542,29 @@ public class Robot extends TimedRobot {
                 intakeState = IntakeState.cubeClosed;
 
             /* Pickup Positions */
-            if (bbRight.getRawButtonPressed(4))
+            if (farmSim2.getRawButtonPressed(2))
                 armState = ArmState.goConePickupBackGround;
-            if (bbRight.getRawButtonPressed(1))
+            if (farmSim2.getRawButtonPressed(1))
                 armState = ArmState.goConePickupFrontGround;
 
-            if (bbRight.getRawButtonPressed(5))
+            if (farmSim1.getRawButtonPressed(10))
                 armState = ArmState.goConePickupBackShelf;
-            if (bbRight.getRawButtonPressed(2))
+            if (farmSim1.getRawButtonPressed(9))
                 armState = ArmState.goConePickupFrontShelf;
 
             /* Scoring Positions */
-            if (bbLeft.getRawButtonPressed(4))
+            if (farmSim2.getRawButtonPressed(12))
                 armState = ArmState.goConeScoreBackLow;
-            if (bbLeft.getRawButtonPressed(5))
+            if (farmSim1.getRawButtonPressed(7))
                 armState = ArmState.goConeScoreBackMiddle;
-            if (bbLeft.getRawButtonPressed(6))
+            if (farmSim1.getRawButtonPressed(2))
                 armState = ArmState.goConeScoreBackHigh;
 
-            if (bbLeft.getRawButtonPressed(1))
+            if (farmSim2.getRawButtonPressed(11))
                 armState = ArmState.goConeScoreFrontLow;
-            if (bbLeft.getRawButtonPressed(2))
+            if (farmSim1.getRawButtonPressed(6))
                 armState = ArmState.goConeScoreFrontMiddle;
-            if (bbLeft.getRawButtonPressed(3))
+            if (farmSim1.getRawButtonPressed(1))
                 armState = ArmState.goConeScoreFrontHigh;
         } else {
             /* Claw Control */
@@ -579,29 +574,29 @@ public class Robot extends TimedRobot {
                 intakeState = IntakeState.cubeClosed;
 
             /* Pickup Positions */
-            if (bbRight.getRawButtonPressed(4))
+            if (farmSim2.getRawButtonPressed(2))
                 armState = ArmState.goCubePickupBackGround;
-            if (bbRight.getRawButtonPressed(1))
+            if (farmSim2.getRawButtonPressed(1))
                 armState = ArmState.goCubePickupFrontGround;
 
-            if (bbRight.getRawButtonPressed(5))
+            if (farmSim1.getRawButtonPressed(10))
                 armState = ArmState.goCubePickupBackShelf;
-            if (bbRight.getRawButtonPressed(2))
+            if (farmSim1.getRawButtonPressed(9))
                 armState = ArmState.goCubePickupFrontShelf;
 
             /* Scoring Positions */
-            if (bbLeft.getRawButtonPressed(4))
+            if (farmSim2.getRawButtonPressed(12))
                 armState = ArmState.goCubeScoreBackLow;
-            if (bbLeft.getRawButtonPressed(5))
+            if (farmSim1.getRawButtonPressed(7))
                 armState = ArmState.goCubeScoreBackMiddle;
-            if (bbLeft.getRawButtonPressed(6))
+            if (farmSim1.getRawButtonPressed(2))
                 armState = ArmState.goCubeScoreBackHigh;
 
-            if (bbLeft.getRawButtonPressed(1))
+            if (farmSim2.getRawButtonPressed(11))
                 armState = ArmState.goCubeScoreFrontLow;
-            if (bbLeft.getRawButtonPressed(2))
+            if (farmSim1.getRawButtonPressed(6))
                 armState = ArmState.goCubeScoreFrontMiddle;
-            if (bbLeft.getRawButtonPressed(3))
+            if (farmSim1.getRawButtonPressed(1))
                 armState = ArmState.goCubeScoreFrontHigh;
         }
 
@@ -812,7 +807,7 @@ public class Robot extends TimedRobot {
              * START JOINT 3 MANUAL CONTROL
              *************************************************************************************/
             /* If manual inputs are present */
-            if (Math.abs(bbRight.getY()) > 0.5 || Math.abs(bbRight.getX()) > 0.5 ||
+            if (Math.abs(farmSim1.getY()) > 0.1 || Math.abs(farmSim1.getX()) > 0.1 ||
                     c_controller.getPOV() == 90 || c_controller.getPOV() == 270) {
                 /* Put the arm into manual mode */
                 armState = ArmState.manual;
@@ -837,9 +832,6 @@ public class Robot extends TimedRobot {
                 currentArmPosition.z = -225;
             }
 
-            if (bbRight.getRawButton(5))
-                currentArmPosition.z = 0;
-
             /*************************************************************************************
              * END JOINT 3 MANUAL CONTROL
              *************************************************************************************/
@@ -848,8 +840,8 @@ public class Robot extends TimedRobot {
              * START X & Y MANUAL CONTROL
              *************************************************************************************/
             /* Increment X & Y */
-            currentArmPosition.incrementX(deadZone(bbRight.getX()) * -0.25);
-            currentArmPosition.incrementY(deadZone(bbRight.getY()) * -0.25);
+            currentArmPosition.incrementX(deadZone(farmSim1.getX()) * -0.25);
+            currentArmPosition.incrementY(deadZone(farmSim1.getY()) * -0.25);
 
             if (armState == ArmState.manual) {
                 /* If current position is within frame perimeter */
