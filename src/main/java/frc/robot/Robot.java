@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.io.ObjectInputStream.GetField;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -12,14 +14,18 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
+import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -89,37 +95,37 @@ public class Robot extends TimedRobot {
 
     /* Pickup Positions */
     ArmPosition conePickupFrontGround = new ArmPosition(22, 2.75, 225);
-    ArmPosition conePickupBackGround = new ArmPosition(-24.5, 0, -10);
+    ArmPosition conePickupBackGround = new ArmPosition(-24.5, -3, -1);
 
-    ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 34, -121);
-    ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 43, -81);
+    ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 37.75, 264);
+    ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 36.75, -81);
 
     ArmPosition conePickupOnSideFront = new ArmPosition(25.5, 3.75, -117);
     ArmPosition conePickupOnSideBack = new ArmPosition(-25.5, 3.75, -117);
 
-    ArmPosition cubePickupFrontGround = new ArmPosition(22, 2.75, 255);
-    ArmPosition cubePickupBackGround = new ArmPosition(-24.5, 0, -10);
+    ArmPosition cubePickupFrontGround = new ArmPosition(22, -0.25, 195);
+    ArmPosition cubePickupBackGround = new ArmPosition(-24.5, -3, -1);
 
-    ArmPosition cubePickupFrontShelf = new ArmPosition(33.5, 34, -121);
-    ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 43, -81);
+    ArmPosition cubePickupFrontShelf = new ArmPosition(33.5, 37.75, 264);
+    ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 36.75, -81);
 
     /* Cone Scoring Positions */
-    ArmPosition coneScoreFrontLow = new ArmPosition(30, 1, 225);
-    ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 39.25, -130);
-    ArmPosition coneScoreFrontHigh = new ArmPosition(48.75, 45, -112);
+    ArmPosition coneScoreFrontLow = new ArmPosition(31.25, 5.5, 183);
+    ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 35.25, 215);
+    ArmPosition coneScoreFrontHigh = new ArmPosition(50, 50, 252);
 
-    ArmPosition coneScoreBackLow = new ArmPosition(-21, 3, 41);
-    ArmPosition coneScoreBackMiddle = new ArmPosition(-41, 37.5, -39);
-    ArmPosition coneScoreBackHigh = new ArmPosition(-50.25, 49.75, -69);
+    ArmPosition coneScoreBackLow = new ArmPosition(31.25, 5.5, 183);
+    ArmPosition coneScoreBackMiddle = new ArmPosition(-46.25, 28.25, -21);
+    ArmPosition coneScoreBackHigh = new ArmPosition(-53.75, 43.25, -45);
 
     /* Cube Scoring Positions */
-    ArmPosition cubeScoreFrontLow = new ArmPosition(33, 7.5, -90);
-    ArmPosition cubeScoreFrontMiddle = new ArmPosition(42.25, 29, -74);
-    ArmPosition cubeScoreFrontHigh = new ArmPosition(51.75, 45, -44);
+    ArmPosition cubeScoreFrontLow = new ArmPosition(28.5, 5.25, 213);
+    ArmPosition cubeScoreFrontMiddle = new ArmPosition(42.25, 38, -74);
+    ArmPosition cubeScoreFrontHigh = new ArmPosition(51.75, 49, -44);
 
-    ArmPosition cubeScoreBackLow = new ArmPosition(-21, 3, 41);
-    ArmPosition cubeScoreBackMiddle = new ArmPosition(-38.25, 28.75, -69);
-    ArmPosition cubeScoreBackHigh = new ArmPosition(-49, 42, -102);
+    ArmPosition cubeScoreBackLow = new ArmPosition(-27.75, 1.25, -40);
+    ArmPosition cubeScoreBackMiddle = new ArmPosition(-38.25, 31.75, 258);
+    ArmPosition cubeScoreBackHigh = new ArmPosition(-49, 42, 249);
 
     boolean isAuto = false;
     boolean movingAuto = false;
@@ -161,6 +167,7 @@ public class Robot extends TimedRobot {
     private final SendableChooser<String> gamePieceChooser = new SendableChooser<>();
 
 
+    public static boolean lock = false;
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -212,6 +219,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
+        SmartDashboard.putNumber("Joint 3 Raw", Arm.m_Joint3.getEncoder().getPosition());
 
         /* Desired Angles */
         SmartDashboard.putNumber("joint1Angle", Math.toDegrees(Arm.joint1Angle));
@@ -250,9 +258,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("J2 Timeout", joint2Timeout);
 
 
-        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+        // SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+        // SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
+        SmartDashboard.putBoolean("Brakes Locked", lock);
         SmartDashboard.putNumber("IMU Axis", imu.getAngle());
 
     }
@@ -264,6 +273,8 @@ public class Robot extends TimedRobot {
         autoTimeoutTimer.start();
         isAuto = false;
         autoStep = 1;
+
+        lock = false;
 
         arm.updateIntake(IntakeState.cubeClosed);
 
@@ -288,7 +299,7 @@ public class Robot extends TimedRobot {
 
             arm.updateArm(-1, 9, 90);
 
-            odometry.straight(28.0);
+            odometry.straight(31.0);
             autoStep = 2;
             autoOdoCounter = 0;
             autoArmCounter = 0;
@@ -324,7 +335,7 @@ public class Robot extends TimedRobot {
             if (autoGamePiece == coneAuto) {
                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+                arm.updateArm(cubeScoreFrontHigh);
             }
 
             autoArmCounter++;
@@ -332,7 +343,7 @@ public class Robot extends TimedRobot {
             if (autoArmCounter > 125 || (arm.isArmInPosition())) {
                 
                 autoStep = 4;
-                odometry.straight(-27);
+                odometry.straight(-30);
                 Odometry.MAX_POWER = 0.40;
             
             }
@@ -342,7 +353,7 @@ public class Robot extends TimedRobot {
             if (autoGamePiece == coneAuto) {
                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+                arm.updateArm(cubeScoreFrontHigh);
             }
 
             powers = odometry.update();
@@ -362,7 +373,7 @@ public class Robot extends TimedRobot {
             if (autoGamePiece == coneAuto) {
                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+                arm.updateArm(cubeScoreFrontHigh);
             }
 
             arm.updateIntake(IntakeState.cubeOpen);
@@ -373,14 +384,14 @@ public class Robot extends TimedRobot {
                 autoArmCounter = 0;
 
                 autoStep = 6;
-                Odometry.MAX_POWER = 65;
+                Odometry.MAX_POWER = 0.45;
 
                 switch (autoSelected) {
                     case (defaultAuto):
                         odometry.straight(0);
                         break;
                     case (rightAuto):
-                        odometry.straight(25);
+                        odometry.straight(15);
                         break;
                     case (leftAuto):
                         odometry.straight(159);
@@ -389,7 +400,7 @@ public class Robot extends TimedRobot {
                         odometry.straight(10);
                         break;
                     case (middleChargeAuto):
-                        odometry.straight(111.5);
+                        odometry.straight(97.0);
                         break;
                 }
 
@@ -416,18 +427,28 @@ public class Robot extends TimedRobot {
                 autoStep = 7;
                 autoIntakeCounter = 0;
                 
-            } else {
+                lock = true;
 
-             
             }
 
         } else {
 
             arm.updateArm(0, 9, 90);
         
-            
+            if (autoSelected == middleChargeAuto) {
 
-            powers = odometry.update();
+                powers = odometry.balance(imu.getAngle(), imu.getRate());
+
+            } else {
+
+                powers = odometry.update();
+
+            }
+
+            m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+            m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+            m_driveRight1.setNeutralMode(NeutralMode.Brake);
+            m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
             mg_rightDrive.set(powers[0]);
             mg_leftDrive.set(powers[1]);
@@ -452,7 +473,7 @@ public class Robot extends TimedRobot {
             // mg_rightDrive.set(0);
             // mg_leftDrive.set(0);
 
-            autoTimeoutTimer.stop();
+            // autoTimeoutTimer.stop();
         }
 
     
@@ -464,6 +485,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+
+        lock = false;
 
         m_driveLeft1.setNeutralMode(NeutralMode.Coast);
         m_driveLeft2.setNeutralMode(NeutralMode.Coast);
@@ -602,6 +625,9 @@ public class Robot extends TimedRobot {
 
         /* Set Claw state */
         arm.updateIntake(intakeState);
+
+        if (farmSim2.getRawButtonPressed(12))
+            lock = !lock;
 
         /* Enable Inverse Kinematic PID Control of arm */
         if (c_controller.getBackButtonPressed()) {
@@ -823,13 +849,13 @@ public class Robot extends TimedRobot {
                 currentArmPosition.incrementZ(3);
             }
 
-            /* If Joint 3 angle is over 225 degrees reset to 225 */
-            if (currentArmPosition.z > 225) {
-                currentArmPosition.z = 225;
+            /* If Joint 3 angle is over 336 degrees reset to 336 */
+            if (currentArmPosition.z > 336) {
+                currentArmPosition.z = 336;
             }
-            /* If Joint 3 angle is under -225 degrees reset to -225 */
-            else if (currentArmPosition.z < -225) {
-                currentArmPosition.z = -225;
+            /* If Joint 3 angle is under -69 degrees reset to -69 */
+            else if (currentArmPosition.z < -69) {
+                currentArmPosition.z = -69;
             }
 
             /*************************************************************************************
