@@ -525,7 +525,7 @@ public class Robot extends TimedRobot {
 
         // Arm Position controls
         // TODO if robot drive fast for extended period of time (a few seconds?) set arm
-        // to position within bumpers
+        // TODO to position within bumpers
 
         // Uncomment for driving
 
@@ -539,9 +539,9 @@ public class Robot extends TimedRobot {
         }
 
         /* Home Control */
-        if (farmSim1.getRawButton(9))
+        if (farmSim1.getRawButton(4))
             armState = ArmState.goFrontHome;
-        if (farmSim1.getRawButton(10))
+        if (farmSim1.getRawButton(5))
             armState = ArmState.goBackHome;
         if (farmSim2.getRawButtonPressed(5))
             armState = ArmState.goHome;
@@ -576,7 +576,7 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goConePickupFrontShelf;
 
             /* Scoring Positions */
-            if (farmSim2.getRawButtonPressed(12))
+            if (farmSim2.getRawButtonPressed(13))
                 armState = ArmState.goConeScoreBackLow;
             if (farmSim1.getRawButtonPressed(7))
                 armState = ArmState.goConeScoreBackMiddle;
