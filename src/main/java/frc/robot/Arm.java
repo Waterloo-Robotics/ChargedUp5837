@@ -225,7 +225,7 @@ public class Arm {
         ((Math.toDegrees(joint1Angle) <= 60) && (Math.toDegrees(joint1Angle) >= -60)) && // joint 1 isn't outside of limits
         ((Math.toDegrees(joint2Angle) <= 150) && (Math.toDegrees(joint2Angle) >= -150)) && // joint 2 isn't outside of limits
         (y <= 70.5) && // doesn't exceed height limit
-        (x <= 63.0 && x >= -63.0); // doesn't exceed 48 inches from frame
+        (x <= 60.0 && x >= -60.0); // doesn't exceed 48 inches from frame
 
     }
 
@@ -269,32 +269,40 @@ public class Arm {
             
             joint3AutoTest(z);
 
-            if (!isJoint1AtPosition()) {
-                joint1Brake.set(DoubleSolenoid.Value.kForward);
-                joint1AtPositionPersistence = 0;
-            } else {
-
+            if (Robot.lock) {
                 
-                if (joint1AtPositionPersistence > 25) {
-                    joint1Brake.set(DoubleSolenoid.Value.kReverse);
+                joint1Brake.set(DoubleSolenoid.Value.kReverse);
+                joint2Brake.set(DoubleSolenoid.Value.kReverse);
+
+            } else {
+                if (!isJoint1AtPosition()) {
+                    joint1Brake.set(DoubleSolenoid.Value.kForward);
+                    joint1AtPositionPersistence = 0;
                 } else {
 
-                    joint1AtPositionPersistence++;
+                    
+                    if (joint1AtPositionPersistence > 25) {
+                        joint1Brake.set(DoubleSolenoid.Value.kReverse);
+                    } else {
+
+                        joint1AtPositionPersistence++;
+
+                    }
 
                 }
 
-            }
-
-            if (!isJoint2AtPosition()) {
-                joint2Brake.set(DoubleSolenoid.Value.kForward);
-                joint2AtPositionPersistence = 0;
-            } else {
-
-                if (joint2AtPositionPersistence > 50) {
-                    joint2Brake.set(DoubleSolenoid.Value.kReverse);
+                if (!isJoint2AtPosition()) {
+                    joint2Brake.set(DoubleSolenoid.Value.kForward);
+                    joint2AtPositionPersistence = 0;
                 } else {
 
-                    joint2AtPositionPersistence++;
+                    if (joint2AtPositionPersistence > 50) {
+                        joint2Brake.set(DoubleSolenoid.Value.kReverse);
+                    } else {
+
+                        joint2AtPositionPersistence++;
+
+                    }
 
                 }
 
@@ -302,8 +310,8 @@ public class Arm {
         
         }
 
-        SmartDashboard.putNumber("x", x);
-        SmartDashboard.putNumber("y", y);
+        // SmartDashboard.putNumber("x", x);
+        // SmartDashboard.putNumber("y", y);
 
     }
 
@@ -385,8 +393,8 @@ public class Arm {
         SmartDashboard.putNumber("Joint 1 Moment", joint1Moment);
         SmartDashboard.putNumber("Joint 2 Moment", joint2Moment);
 
-        SmartDashboard.putNumber("arm1XDist Dist", arm1XDist);
-        SmartDashboard.putNumber("arm2XDist Dist", arm2XDist);
+        // SmartDashboard.putNumber("arm1XDist Dist", arm1XDist);
+        // SmartDashboard.putNumber("arm2XDist Dist", arm2XDist);
 
         joint1Added = -joint1Moment * this.joint1_physicsMult;
         joint2Added = joint2Moment * this.joint2_physicsMult;
@@ -502,14 +510,14 @@ public class Arm {
     public double joint1CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 278.341 + 14.4;
+        return Robot.Joint1Enc.getPulseWidthPosition() / 11.37 - 278.341 + 4.8 + 36.4 - 24.3 + 2.5;
 
     }
 
     public double joint2CurrentPosition() {
 
         // return ((Robot.Joint2Enc.getPulseWidthPosition() - 351.0) / 4096.0 * 360.0);
-        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 247.85;
+        return Robot.Joint2Enc.getPulseWidthPosition() / 11.37 - 202.0 + 35.8 - 58.5 - 91.5 - 8;
 
     }
 

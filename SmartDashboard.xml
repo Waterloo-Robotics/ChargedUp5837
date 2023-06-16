@@ -1,5 +1,41 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Desired Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="4" y="17"/>
+	</widget>
+	<widget field="Current Side" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="15"/>
+	</widget>
+	<widget field="Current y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="1"/>
+	</widget>
+	<widget field="Current x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="5" y="21"/>
+	</widget>
+	<widget field="Game Piece" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="0" y="357"/>
+	</widget>
+	<widget field="IMU Axis" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="12" y="20"/>
+	</widget>
+	<widget field="Brakes Locked" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="8" y="0"/>
+	</widget>
+	<widget field="Timeout Override" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="10" y="0"/>
+	</widget>
+	<widget field="Auto Step" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="22" y="15"/>
+	</widget>
+	<widget field="Num Steps" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="740" y="447"/>
+	</widget>
+	<widget field="Sequence Step" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="19" y="24"/>
+	</widget>
+	<widget field="Joint 3 Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="620" y="371"/>
+	</widget>
 	<widget field="y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="740" y="350"/>
 	</widget>
@@ -304,8 +340,4 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="arm2XDist Dist"/>
-	<hidden field="joint2Setpoint"/>
-	<hidden field="Desired Side"/>
-	<hidden field="Current Side"/>
 </xml>
