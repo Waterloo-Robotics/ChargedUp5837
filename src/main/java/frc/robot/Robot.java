@@ -866,8 +866,8 @@ public class Robot extends TimedRobot {
              * START X & Y MANUAL CONTROL
              *************************************************************************************/
             /* Increment X & Y */
-            currentArmPosition.incrementX(deadZone(farmSim1.getX()) * -0.25);
-            currentArmPosition.incrementY(deadZone(farmSim1.getY()) * -0.25);
+            currentArmPosition.incrementX(deadZone(farmSim1.getX() + farmSim2.getX()) * -0.25);
+            currentArmPosition.incrementY(deadZone(farmSim1.getY() + farmSim2.getY()) * -0.25);
 
             if (armState == ArmState.manual) {
                 /* If current position is within frame perimeter */
