@@ -67,6 +67,8 @@ public class Odometry {
 
     }
 
+
+
     public double[] update() {
 
         double[] powers = new double[2];
@@ -172,6 +174,8 @@ public class Odometry {
 
         this.destinationReached = false;
         destinationReachedPersistenceCounter = 0;
+
+
 
         genPID.setSetpoint(inches);
     }

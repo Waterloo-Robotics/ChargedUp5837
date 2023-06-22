@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Arm.ArmControlState;
 import frc.robot.Arm.ArmState;
 import frc.robot.Arm.IntakeState;
+import edu.wpi.first.wpilibj.AnalogInput;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -142,6 +143,8 @@ public class Robot extends TimedRobot {
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     NetworkTableEntry camMode;
 
+    AnalogInput distanceSensor = new AnalogInput(0);
+
     /* Autonomous Variables */
     double score1TimeoutAuto = 0.5;
     int autoStep = 1;
@@ -216,6 +219,7 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         /************ Arm Smart Dashboard ************/
         /* Current Angles */
+        SmartDashboard.putNumber("Distance Sensor Value", distanceSensor.getValue());
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
