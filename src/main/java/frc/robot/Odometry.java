@@ -54,7 +54,12 @@ public class Odometry {
     private int destinationReachedPersistenceCounterLimit = 15;
 
     private boolean isStraight = true;
-    double inchesPerDegree = 1;
+
+    double trackWidth = 25.25;
+    double fullRotation = trackWidth * Math.PI; // the amount the wheels travel in a full rotation
+    double countsPerRobotRev = fullRotation * (4096 / wheelCircumference);
+    double countsPerDegree = countsPerRobotRev / 360;
+    double inchesPerDegree = toInches(countsPerDegree);
 
     public Odometry (MotorControllerGroup leftMotorGroup,
                      MotorControllerGroup rightMotorGroup,
@@ -171,18 +176,18 @@ public class Odometry {
     public void straight(double inches) {
 
         this.isStraight = true;
-        this.move(inches, this.isStraight);
+        this.move(inches);
 
     }
 
     public void turn(double degrees) {
 
         this.isStraight = false;
-        this.move(degrees * inchesPerDegree, this.isStraight);
+        this.move(degrees * inchesPerDegree);
 
     }
 
-    public void move(double inches, boolean isStraight) {
+    public void move(double inches) {
 
         /* Reset static variables */
         resetEncoders();
