@@ -53,6 +53,9 @@ public class Odometry {
     private int destinationReachedPersistenceCounter;
     private int destinationReachedPersistenceCounterLimit = 15;
 
+    private boolean isStraight = true;
+    double inchesPerDegree = 1;
+
     public Odometry (MotorControllerGroup leftMotorGroup,
                      MotorControllerGroup rightMotorGroup,
                      DifferentialDrive drivebase,
@@ -77,10 +80,13 @@ public class Odometry {
         if (!this.destinationReached) {
 
             this.rightTravelled = toInches(Odometry.rightEncoder.getQuadraturePosition());
-            this.leftTravelled = toInches(-Odometry.leftEncoder.getQuadraturePosition());
+            if (isStraight) this.leftTravelled = toInches(-Odometry.leftEncoder.getQuadraturePosition());
+            else this.leftTravelled = toInches(Odometry.leftEncoder.getQuadraturePosition());
 
-            this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
-            this.differentialError = this.rightTravelled - this.leftTravelled;
+            if (isStraight) this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
+            else this.distanceTravelled = (this.rightTravelled + -this.leftTravelled) / 2.0;
+            if (isStraight) this.differentialError = this.rightTravelled - this.leftTravelled;
+            else this.differentialError = 0;
 
             this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
             this.diffPower = clipPowerStraight(Odometry.diffPID.calculate(differentialError));
@@ -120,7 +126,8 @@ public class Odometry {
         }
 
         powers[0] = this.rightPower;
-        powers[1] = this.leftPower;
+        if (isStraight) powers[1] = this.leftPower;
+        else powers[1] = -this.leftPower;
 
         return powers;
 
@@ -162,6 +169,20 @@ public class Odometry {
     }
 
     public void straight(double inches) {
+
+        this.isStraight = true;
+        this.move(inches, this.isStraight);
+
+    }
+
+    public void turn(double degrees) {
+
+        this.isStraight = false;
+        this.move(degrees * inchesPerDegree, this.isStraight);
+
+    }
+
+    public void move(double inches, boolean isStraight) {
 
         /* Reset static variables */
         resetEncoders();
