@@ -1012,9 +1012,35 @@ public class Robot extends TimedRobot {
     }
 
     /** This function is called periodically during test mode. */
+    
+    int testStep = 0;
     @Override
     public void testPeriodic() {
 
+        r_robotDrive.feedWatchdog();
+
+        if (testStep == 0) {
+
+            odometry.turn(90);
+            testStep = 1;
+
+        } else if (testStep == 1) {
+
+            mg_rightDrive.set(odometry.update()[0]);
+            mg_leftDrive.set(odometry.update()[1]);
+
+            if (odometry.moveFinished()) {
+
+                testStep = 2;
+
+            }
+
+        } else {
+
+            mg_leftDrive.set(0);
+            mg_rightDrive.set(0);
+
+        }
         // if (bbRight.getRawButton(1))
         //     leftDriveEnc.setQuadraturePosition(0, 0);
         // if (bbRight.getRawButton(4))
