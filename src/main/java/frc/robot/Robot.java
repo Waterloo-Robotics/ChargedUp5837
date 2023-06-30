@@ -491,7 +491,7 @@ public class Robot extends TimedRobot {
 
         if (testStep == 0) {
 
-            odometry.turn(180);
+            odometry.turn(-180);
             testStep = 1;
 
         } else if (testStep == 1) {
