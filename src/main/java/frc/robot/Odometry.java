@@ -28,9 +28,9 @@ public class Odometry {
     private static PIDController diffPID = new PIDController(P_differential, 0, 0);
 
     /* Speed Constants */
-    public static double MAX_POWER = 0.3;
+    public static double MAX_POWER = 0.5;
     private static double MIN_POWER_STRAIGHT = 0.1;
-    // private static double MIN_POWER_TURN = 0;
+     private static double MIN_POWER_TURN = 0.15;
 
     public double genPower;
     public double diffPower;
@@ -96,7 +96,7 @@ public class Odometry {
             } else {
 
                 this.differentialError = 0;
-                
+
             }
 
             this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
@@ -262,6 +262,24 @@ public class Odometry {
         if (Math.abs(power) < Odometry.MIN_POWER_STRAIGHT) {
 
             return Odometry.MIN_POWER_STRAIGHT * Math.signum(power);
+
+        } else if (Math.abs(power) > Odometry.MAX_POWER) {
+
+            return Odometry.MAX_POWER * Math.signum(power);
+
+        } else {
+
+            return power;
+
+        }
+
+    }
+
+    private static double clipPowerTurn(double power) {
+
+        if (Math.abs(power) < Odometry.MIN_POWER_TURN) {
+
+            return Odometry.MIN_POWER_TURN * Math.signum(power);
 
         } else if (Math.abs(power) > Odometry.MAX_POWER) {
 
