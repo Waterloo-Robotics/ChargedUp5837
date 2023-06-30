@@ -21,7 +21,7 @@ public class Odometry {
 
     /* PID Constants */
     private static double P_general_fwrd = 0.015;
-    private static double P_general_turn = 0.001;
+    private static double P_general_turn = 0.021;
     private static double P_differential = 0.00000000000001;
 
     static PIDController genPID = new PIDController(P_general_fwrd, 0, 0);
@@ -30,7 +30,7 @@ public class Odometry {
     /* Speed Constants */
     public static double MAX_POWER = 0.5;
     private static double MIN_POWER_STRAIGHT = 0.1;
-     private static double MIN_POWER_TURN = 0.15;
+    private static double MIN_POWER_TURN = 0.15;
 
     public double genPower;
     public double diffPower;
@@ -55,7 +55,7 @@ public class Odometry {
 
     private boolean isStraight = true;
 
-    double trackWidth = 26.5;
+    double trackWidth = 27.25;
     double fullRotation = trackWidth * Math.PI; // the amount the wheels travel in a full rotation
     double countsPerRobotRev = fullRotation * (4096 / wheelCircumference);
     double countsPerDegree = countsPerRobotRev / 360;
@@ -189,6 +189,7 @@ public class Odometry {
 
     public void straight(double inches) {
 
+        genPID.setP(P_general_fwrd);
         this.isStraight = true;
         this.move(inches);
 
@@ -196,6 +197,7 @@ public class Odometry {
 
     public void turn(double degrees) {
 
+        genPID.setP(P_general_turn);
         this.isStraight = false;
         this.move(degrees * inchesPerDegree);
 

@@ -297,13 +297,15 @@ public class Robot extends TimedRobot {
         autoSelected = autoChooser.getSelected();
         autoGamePiece = gamePieceChooser.getSelected();
 
+        testStep = 0;
+
     }
 
     /** This function is called periodically during autonomous. */
     @Override
     public void autonomousPeriodic() {
         // double[] powers;
-        // r_robotDrive.feedWatchdog();
+        r_robotDrive.feedWatchdog();
         // if (autoStep == 1) {
 
         //     arm.updateArm(-1, 9, 90);
@@ -489,7 +491,7 @@ public class Robot extends TimedRobot {
 
         if (testStep == 0) {
 
-            odometry.turn(90);
+            odometry.turn(180);
             testStep = 1;
 
         } else if (testStep == 1) {
