@@ -219,6 +219,8 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         /************ Arm Smart Dashboard ************/
         /* Current Angles */
+
+        SmartDashboard.putNumber("Error", Odometry.genPID.getPositionError());
         SmartDashboard.putNumber("Distance Sensor Value", distanceSensor.getValue());
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
