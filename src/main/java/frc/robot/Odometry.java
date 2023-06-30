@@ -55,7 +55,7 @@ public class Odometry {
 
     private boolean isStraight = true;
 
-    double trackWidth = 25.25;
+    double trackWidth = 26.5;
     double fullRotation = trackWidth * Math.PI; // the amount the wheels travel in a full rotation
     double countsPerRobotRev = fullRotation * (4096 / wheelCircumference);
     double countsPerDegree = countsPerRobotRev / 360;
