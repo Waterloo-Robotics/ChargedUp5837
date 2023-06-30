@@ -99,7 +99,15 @@ public class Odometry {
 
             }
 
-            this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
+            if (isStraight) {
+
+                this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
+
+            } else {
+
+                this.genPower = -clipPowerTurn(Odometry.genPID.calculate(distanceTravelled));
+
+            }
             this.diffPower = clipPowerStraight(Odometry.diffPID.calculate(differentialError));
 
             this.rightPower = this.genPower - this.diffPower / 2.0;

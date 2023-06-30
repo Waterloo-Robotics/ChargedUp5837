@@ -220,6 +220,8 @@ public class Robot extends TimedRobot {
         /************ Arm Smart Dashboard ************/
         /* Current Angles */
 
+        SmartDashboard.putBoolean("Move Finished", odometry.moveFinished());
+
         SmartDashboard.putNumber("Odo Error", Odometry.genPID.getPositionError());
         SmartDashboard.putNumber("Distance Travelled", odometry.distanceTravelled);
         SmartDashboard.putNumber("Distance Sensor Value", distanceSensor.getValue());
