@@ -221,6 +221,7 @@ public class Robot extends TimedRobot {
         /* Current Angles */
 
         SmartDashboard.putNumber("Odo Error", Odometry.genPID.getPositionError());
+        SmartDashboard.putNumber("Distance Travelled", odometry.distanceTravelled);
         SmartDashboard.putNumber("Distance Sensor Value", distanceSensor.getValue());
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
