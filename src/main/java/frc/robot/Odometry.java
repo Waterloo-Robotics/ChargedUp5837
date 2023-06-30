@@ -89,8 +89,15 @@ public class Odometry {
             else this.leftTravelled = toInches(Odometry.leftEncoder.getQuadraturePosition());
 
             this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
-            if (isStraight) this.differentialError = this.rightTravelled - this.leftTravelled;
-            else this.differentialError = 0;
+            if (isStraight) {
+
+                this.differentialError = this.rightTravelled - this.leftTravelled;
+
+            } else {
+
+                this.differentialError = 0;
+                
+            }
 
             this.genPower = -clipPowerStraight(Odometry.genPID.calculate(distanceTravelled));
             this.diffPower = clipPowerStraight(Odometry.diffPID.calculate(differentialError));
