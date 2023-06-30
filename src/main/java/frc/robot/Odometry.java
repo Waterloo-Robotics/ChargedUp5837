@@ -88,8 +88,7 @@ public class Odometry {
             if (isStraight) this.leftTravelled = toInches(-Odometry.leftEncoder.getQuadraturePosition());
             else this.leftTravelled = toInches(Odometry.leftEncoder.getQuadraturePosition());
 
-            if (isStraight) this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
-            else this.distanceTravelled = (this.rightTravelled + -this.leftTravelled) / 2.0;
+            this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
             if (isStraight) this.differentialError = this.rightTravelled - this.leftTravelled;
             else this.differentialError = 0;
 
