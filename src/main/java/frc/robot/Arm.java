@@ -241,7 +241,7 @@ public class Arm {
         double y = position.y;
         double z = position.z;
 
-        updateArm(x, y, z);
+        this.updateArm(x, y, z);
 
     }
 

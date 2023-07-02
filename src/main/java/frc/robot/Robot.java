@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.io.ObjectInputStream.GetField;
-
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -14,18 +12,14 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.ADIS16448_IMU.IMUAxis;
-import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -91,42 +85,42 @@ public class Robot extends TimedRobot {
     boolean coneControl, front = true;
 
     ArmPosition home = new ArmPosition(0, 9, 90);
-    ArmPosition homeFront = new ArmPosition(16, 9, 90);
-    ArmPosition homeBack = new ArmPosition(-16, 9, 90);
+    ArmPosition homeBack = new ArmPosition(16, 9, 90);
+    ArmPosition homeFront = new ArmPosition(-16, 9, 90);
 
     /* Pickup Positions */
-    ArmPosition conePickupFrontGround = new ArmPosition(22, 2.75, 225);
-    ArmPosition conePickupBackGround = new ArmPosition(-24.5, -3, -1);
+    ArmPosition conePickupBackGround = new ArmPosition(22, 2.75, 225);
+    ArmPosition conePickupFrontGround = new ArmPosition(-24.5, -3, -1);
 
-    ArmPosition conePickupFrontShelf = new ArmPosition(33.5, 37.75, 264);
-    ArmPosition conePickupBackShelf = new ArmPosition(-36.25, 36.75, -81);
+    ArmPosition conePickupBackShelf = new ArmPosition(33.5, 37.75, 264);
+    ArmPosition conePickupFrontShelf = new ArmPosition(-36.25, 36.75, -81);
 
-    ArmPosition conePickupOnSideFront = new ArmPosition(25.5, 3.75, -117);
-    ArmPosition conePickupOnSideBack = new ArmPosition(-25.5, 3.75, -117);
+    ArmPosition conePickupOnSideBack = new ArmPosition(25.5, 3.75, -117);
+    ArmPosition conePickupOnSideFront = new ArmPosition(-25.5, 3.75, -117);
 
-    ArmPosition cubePickupFrontGround = new ArmPosition(22, -0.25, 195);
-    ArmPosition cubePickupBackGround = new ArmPosition(-24.5, -3, -1);
+    ArmPosition cubePickupBackGround = new ArmPosition(22, -0.25, 195);
+    ArmPosition cubePickupFrontGround = new ArmPosition(-24.5, -3, -1);
 
-    ArmPosition cubePickupFrontShelf = new ArmPosition(33.5, 37.75, 264);
-    ArmPosition cubePickupBackShelf = new ArmPosition(-36.25, 36.75, -81);
+    ArmPosition cubePickupBackShelf = new ArmPosition(33.5, 37.75, 264);
+    ArmPosition cubePickupFrontShelf = new ArmPosition(-36.25, 36.75, -81);
 
     /* Cone Scoring Positions */
-    ArmPosition coneScoreFrontLow = new ArmPosition(31.25, 5.5, 183);
-    ArmPosition coneScoreFrontMiddle = new ArmPosition(46, 35.25, 215);
-    ArmPosition coneScoreFrontHigh = new ArmPosition(50, 50, 252);
-
     ArmPosition coneScoreBackLow = new ArmPosition(31.25, 5.5, 183);
-    ArmPosition coneScoreBackMiddle = new ArmPosition(-46.25, 28.25, -21);
-    ArmPosition coneScoreBackHigh = new ArmPosition(-53.75, 43.25, -45);
+    ArmPosition coneScoreBackMiddle = new ArmPosition(46, 35.25, 215);
+    ArmPosition coneScoreBackHigh = new ArmPosition(50, 50, 252);
+
+    ArmPosition coneScoreFrontLow = new ArmPosition(31.25, 5.5, 183);
+    ArmPosition coneScoreFrontMiddle = new ArmPosition(-46.25, 28.25, -21);
+    ArmPosition coneScoreFrontHigh = new ArmPosition(-53.75, 43.25, -45);
 
     /* Cube Scoring Positions */
-    ArmPosition cubeScoreFrontLow = new ArmPosition(28.5, 5.25, 213);
-    ArmPosition cubeScoreFrontMiddle = new ArmPosition(42.25, 38, -74);
-    ArmPosition cubeScoreFrontHigh = new ArmPosition(51.75, 49, -44);
+    ArmPosition cubeScoreBackLow = new ArmPosition(28.5, 5.25, 213);
+    ArmPosition cubeScoreBackMiddle = new ArmPosition(42.25, 38, -74);
+    ArmPosition cubeScoreBackHigh = new ArmPosition(51.75, 49, -44);
 
-    ArmPosition cubeScoreBackLow = new ArmPosition(-27.75, 1.25, -40);
-    ArmPosition cubeScoreBackMiddle = new ArmPosition(-38.25, 31.75, 258);
-    ArmPosition cubeScoreBackHigh = new ArmPosition(-49, 42, 249);
+    ArmPosition cubeScoreFrontLow = new ArmPosition(-27.75, 1.25, -40);
+    ArmPosition cubeScoreFrontMiddle = new ArmPosition(-38.25, 31.75, 258);
+    ArmPosition cubeScoreFrontHigh = new ArmPosition(-49, 42, 249);
 
     boolean isAuto = false;
     boolean movingAuto = false;
@@ -136,7 +130,7 @@ public class Robot extends TimedRobot {
     ArmPosition desiredArmPosition = new ArmPosition(0, 9, 0);
 
     /* Global Arm Path Planner */
-    ArmPathPlanner pathPlanner = new ArmPathPlanner(homeFront, homeBack);
+    ArmPathPlanner pathPlanner = new ArmPathPlanner(homeBack, homeFront);
     /* Global Arm Sequence */
     ArmSequence currentSequence = new ArmSequence();
 
@@ -324,9 +318,9 @@ public class Robot extends TimedRobot {
 
             if (odometry.distanceTravelled > 20) {
                 if (autoGamePiece == coneAuto) {
-                    arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+                    arm.updateArm(coneScoreBackHigh.x, coneScoreBackHigh.y, coneScoreBackHigh.z);
                 } else {
-                    arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+                    arm.updateArm(cubeScoreBackHigh.x, cubeScoreBackHigh.y + 2, cubeScoreBackHigh.z - 20);
                 }
             } else {
                 arm.updateArm(-1, 9, 90);
@@ -349,9 +343,9 @@ public class Robot extends TimedRobot {
         } else if (autoStep == 3) {
 
             if (autoGamePiece == coneAuto) {
-                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+                arm.updateArm(coneScoreBackHigh.x, coneScoreBackHigh.y, coneScoreBackHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh);
+                arm.updateArm(cubeScoreBackHigh);
             }
 
             autoArmCounter++;
@@ -367,9 +361,9 @@ public class Robot extends TimedRobot {
         } else if (autoStep == 4) {
 
             if (autoGamePiece == coneAuto) {
-                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+                arm.updateArm(coneScoreBackHigh.x, coneScoreBackHigh.y, coneScoreBackHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh);
+                arm.updateArm(cubeScoreBackHigh);
             }
 
             powers = odometry.update();
@@ -387,9 +381,9 @@ public class Robot extends TimedRobot {
         } else if (autoStep == 5) {
 
           if (autoGamePiece == coneAuto) {
-                arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+                arm.updateArm(coneScoreBackHigh.x, coneScoreBackHigh.y, coneScoreBackHigh.z);
             } else {
-                arm.updateArm(cubeScoreFrontHigh);
+                arm.updateArm(cubeScoreBackHigh);
             }
 
             arm.updateIntake(IntakeState.cubeOpen);
@@ -655,133 +649,133 @@ public class Robot extends TimedRobot {
         switch (armState) {
 
             case goConePickupOnSideFront:
-                desiredArmPosition = conePickupOnSideFront;
+                desiredArmPosition = conePickupOnSideBack;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupOnSideFront;
                 break;
 
             case goConePickupOnSideBack:
-                desiredArmPosition = conePickupOnSideBack;
+                desiredArmPosition = conePickupOnSideFront;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupOnSideBack;
                 break;
 
             case goConePickupFrontGround:
-                desiredArmPosition = conePickupFrontGround;
+                desiredArmPosition = conePickupBackGround;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupFrontGround;
                 break;
 
             case goConePickupBackGround:
-                desiredArmPosition = conePickupBackGround;
+                desiredArmPosition = conePickupFrontGround;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupBackGround;
                 break;
 
             case goConePickupFrontShelf:
-                desiredArmPosition = conePickupFrontShelf;
+                desiredArmPosition = conePickupBackShelf;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupFrontShelf;
                 break;
 
             case goConePickupBackShelf:
-                desiredArmPosition = conePickupBackShelf;
+                desiredArmPosition = conePickupFrontShelf;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.conePickupBackShelf;
                 break;
 
             case goCubePickupFrontGround:
-                desiredArmPosition = cubePickupFrontGround;
+                desiredArmPosition = cubePickupBackGround;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubePickupFrontGround;
                 break;
 
             case goCubePickupBackGround:
-                desiredArmPosition = cubePickupBackGround;
+                desiredArmPosition = cubePickupFrontGround;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubePickupBackGround;
                 break;
 
             case goCubePickupFrontShelf:
-                desiredArmPosition = cubePickupFrontShelf;
+                desiredArmPosition = cubePickupBackShelf;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubePickupFrontShelf;
                 break;
 
             case goCubePickupBackShelf:
-                desiredArmPosition = cubePickupBackShelf;
+                desiredArmPosition = cubePickupFrontShelf;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubePickupBackShelf;
                 break;
 
             case goConeScoreFrontLow:
-                desiredArmPosition = coneScoreFrontLow;
+                desiredArmPosition = coneScoreBackLow;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreFrontLow;
                 break;
 
             case goConeScoreFrontMiddle:
-                desiredArmPosition = coneScoreFrontMiddle;
+                desiredArmPosition = coneScoreBackMiddle;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreFrontMiddle;
                 break;
 
             case goConeScoreFrontHigh:
-                desiredArmPosition = coneScoreFrontHigh;
+                desiredArmPosition = coneScoreBackHigh;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreFrontHigh;
                 break;
 
             case goConeScoreBackLow:
-                desiredArmPosition = coneScoreBackLow;
+                desiredArmPosition = coneScoreFrontLow;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreBackLow;
                 break;
 
             case goConeScoreBackMiddle:
-                desiredArmPosition = coneScoreBackMiddle;
+                desiredArmPosition = coneScoreFrontMiddle;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreBackMiddle;
                 break;
 
             case goConeScoreBackHigh:
-                desiredArmPosition = coneScoreBackHigh;
+                desiredArmPosition = coneScoreFrontHigh;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.coneScoreBackHigh;
                 break;
 
             case goCubeScoreFrontLow:
-                desiredArmPosition = cubeScoreFrontLow;
+                desiredArmPosition = cubeScoreBackLow;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreFrontLow;
                 break;
 
             case goCubeScoreFrontMiddle:
-                desiredArmPosition = cubeScoreFrontMiddle;
+                desiredArmPosition = cubeScoreBackMiddle;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreFrontMiddle;
                 break;
 
             case goCubeScoreFrontHigh:
-                desiredArmPosition = cubeScoreFrontHigh;
+                desiredArmPosition = cubeScoreBackHigh;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreFrontHigh;
                 break;
 
             case goCubeScoreBackLow:
-                desiredArmPosition = cubeScoreBackLow;
+                desiredArmPosition = cubeScoreFrontLow;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreBackLow;
                 break;
 
             case goCubeScoreBackMiddle:
-                desiredArmPosition = cubeScoreBackMiddle;
+                desiredArmPosition = cubeScoreFrontMiddle;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreBackMiddle;
                 break;
 
             case goCubeScoreBackHigh:
-                desiredArmPosition = cubeScoreBackHigh;
+                desiredArmPosition = cubeScoreFrontHigh;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.cubeScoreBackHigh;
                 break;
@@ -793,13 +787,13 @@ public class Robot extends TimedRobot {
                 break;
 
             case goFrontHome:
-                desiredArmPosition = homeFront;
+                desiredArmPosition = homeBack;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.frontHome;
                 break;
 
             case goBackHome:
-                desiredArmPosition = homeBack;
+                desiredArmPosition = homeFront;
                 Arm.armControlState = ArmControlState.newPath;
                 armState = ArmState.backHome;
                 break;

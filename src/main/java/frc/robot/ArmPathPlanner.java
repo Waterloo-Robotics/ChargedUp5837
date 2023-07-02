@@ -5,14 +5,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class ArmPathPlanner {
 
     /* Safe positions in front and back of frame perimeter */
-    ArmPosition homeFront;
     ArmPosition homeBack;
+    ArmPosition homeFront;
 
     /* Constructor */
-    public ArmPathPlanner(ArmPosition homeFront, ArmPosition homeBack) {
+    public ArmPathPlanner(ArmPosition homeBack, ArmPosition homeFront) {
 
-        this.homeFront = homeFront;
         this.homeBack = homeBack;
+        this.homeFront = homeFront;
 
     }
 
@@ -42,13 +42,13 @@ public class ArmPathPlanner {
 
             } else if (desiredSide == 0) {
 
-                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(homeBack));
                 path.addPosition(new ArmPosition(desiredArmPosition));
 
             } else if (desiredSide == -1) {
 
-                path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(desiredArmPosition));
 
             } else {
@@ -61,14 +61,14 @@ public class ArmPathPlanner {
         /* If currently within frame perimeter */
         else if (currentSide == 0) {
             if (desiredSide == 1) {
-                path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(homeBack));
                 path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == 0) {
                 path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == -1) {
-                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(desiredArmPosition));
             } 
             else {
@@ -78,12 +78,12 @@ public class ArmPathPlanner {
         /* If currently in Back */
         else if (currentSide == -1) {
             if (desiredSide == 1) {
-                path.addPosition(new ArmPosition(homeBack));
                 path.addPosition(new ArmPosition(homeFront));
+                path.addPosition(new ArmPosition(homeBack));
                 path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == 0) {
-                path.addPosition(new ArmPosition(homeBack));
+                path.addPosition(new ArmPosition(homeFront));
                 path.addPosition(new ArmPosition(desiredArmPosition));
             }
             else if (desiredSide == -1) {
