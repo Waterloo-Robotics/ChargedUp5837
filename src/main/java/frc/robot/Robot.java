@@ -222,10 +222,14 @@ public class Robot extends TimedRobot {
         /* Current Angles */
 
         SmartDashboard.putBoolean("Move Finished", odometry.moveFinished());
-
         SmartDashboard.putNumber("Odo Error", Odometry.genPID.getPositionError());
+        SmartDashboard.putNumber("Diff Error", Odometry.diffPID.getPositionError());
+        SmartDashboard.putNumber("Right Encoder", Odometry.rightEncoder.getQuadraturePosition());
+        SmartDashboard.putNumber("Left Encoder", Odometry.leftEncoder.getQuadraturePosition());
         SmartDashboard.putNumber("Distance Travelled", odometry.distanceTravelled);
+        
         SmartDashboard.putNumber("Distance Sensor Value", distanceSensor.getValue());
+
         SmartDashboard.putNumber("Joint 1 Angle", arm.joint1CurrentPosition());
         SmartDashboard.putNumber("Joint 2 Angle", arm.joint2CurrentPosition());
         SmartDashboard.putNumber("Joint 3 Enc", arm.joint3CurrentPosition());
@@ -268,8 +272,8 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("J2 Timeout", joint2Timeout);
 
 
-        // SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
-        // SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
+        SmartDashboard.putNumber("Left Received Power", mg_leftDrive.get());
+        SmartDashboard.putNumber("Right Received Power", mg_rightDrive.get());
 
         SmartDashboard.putBoolean("Brakes Locked", lock);
         SmartDashboard.putNumber("IMU Axis", imu.getAngle());
@@ -307,186 +311,211 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
          double[] powers;
         r_robotDrive.feedWatchdog();
-         if (autoStep == 1) {
+        //  if (autoStep == 1) {
 
-             arm.updateArm(-1, 9, 90);
+        //      arm.updateArm(-1, 9, 90);
 
-             odometry.straight(31.0);
-             autoStep = 2;
-             autoOdoCounter = 0;
-             autoArmCounter = 0;
+        //      odometry.straight(31.0);
+        //      autoStep = 2;
+        //      autoOdoCounter = 0;
+        //      autoArmCounter = 0;
 
-         } else if (autoStep == 2) {
+        //  } else if (autoStep == 2) {
 
-             if (odometry.distanceTravelled > 20) {
-                 if (autoGamePiece == coneAuto) {
-                     arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
-                 } else {
-                     arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
-                 }
-             } else {
-                 arm.updateArm(-1, 9, 90);
-             }
+        //      if (odometry.distanceTravelled > 20) {
+        //          if (autoGamePiece == coneAuto) {
+        //              arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+        //          } else {
+        //              arm.updateArm(cubeScoreFrontHigh.x, cubeScoreFrontHigh.y + 2, cubeScoreFrontHigh.z - 20);
+        //          }
+        //      } else {
+        //          arm.updateArm(-1, 9, 90);
+        //      }
 
-             powers = odometry.update();
+        //      powers = odometry.update();
 
-             autoArmCounter++;
-             mg_rightDrive.set(powers[0]);
-             mg_leftDrive.set(powers[1]);
+        //      autoArmCounter++;
+        //      mg_rightDrive.set(powers[0]);
+        //      mg_leftDrive.set(powers[1]);
 
-             if (Math.abs(Odometry.genPID.getPositionError()) < 6) autoOdoCounter++;
-             if ((odometry.moveFinished() || autoOdoCounter > 125) && ((arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) || autoArmCounter > 100)) {
+        //      if (Math.abs(Odometry.genPID.getPositionError()) < 6) autoOdoCounter++;
+        //      if ((odometry.moveFinished() || autoOdoCounter > 125) && ((arm.isArmInPosition() && (Arm.joint1Brake.get() == Value.kReverse || Arm.joint2Brake.get() == Value.kReverse)) || autoArmCounter > 100)) {
 
-                 autoStep = 3;
-                 autoArmCounter = 0;
+        //          autoStep = 3;
+        //          autoArmCounter = 0;
 
-             }
+        //      }
 
-         } else if (autoStep == 3) {
+        //  } else if (autoStep == 3) {
 
-             if (autoGamePiece == coneAuto) {
-                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
-             } else {
-                 arm.updateArm(cubeScoreFrontHigh);
-             }
+        //      if (autoGamePiece == coneAuto) {
+        //          arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+        //      } else {
+        //          arm.updateArm(cubeScoreFrontHigh);
+        //      }
 
-             autoArmCounter++;
+        //      autoArmCounter++;
 
-             if (autoArmCounter > 125 || (arm.isArmInPosition())) {
+        //      if (autoArmCounter > 125 || (arm.isArmInPosition())) {
 
-                 autoStep = 4;
-                 odometry.straight(-30);
-                 Odometry.MAX_POWER = 0.40;
+        //          autoStep = 4;
+        //          odometry.straight(-30);
+        //          Odometry.MAX_POWER = 0.40;
 
-             }
+        //      }
 
-         } else if (autoStep == 4) {
+        //  } else if (autoStep == 4) {
 
-             if (autoGamePiece == coneAuto) {
-                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
-             } else {
-                 arm.updateArm(cubeScoreFrontHigh);
-             }
+        //      if (autoGamePiece == coneAuto) {
+        //          arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+        //      } else {
+        //          arm.updateArm(cubeScoreFrontHigh);
+        //      }
 
-             powers = odometry.update();
+        //      powers = odometry.update();
 
-             mg_rightDrive.set(powers[0]);
-             mg_leftDrive.set(powers[1]);
+        //      mg_rightDrive.set(powers[0]);
+        //      mg_leftDrive.set(powers[1]);
 
-             if (odometry.moveFinished()) {
+        //      if (odometry.moveFinished()) {
 
-                 autoStep = 5;
-                 autoIntakeCounter = 0;
+        //          autoStep = 5;
+        //          autoIntakeCounter = 0;
 
-             }
+        //      }
 
-         } else if (autoStep == 5) {
+        //  } else if (autoStep == 5) {
 
-             if (autoGamePiece == coneAuto) {
-                 arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
-             } else {
-                 arm.updateArm(cubeScoreFrontHigh);
-             }
+        //      if (autoGamePiece == coneAuto) {
+        //          arm.updateArm(coneScoreFrontHigh.x, coneScoreFrontHigh.y, coneScoreFrontHigh.z);
+        //      } else {
+        //          arm.updateArm(cubeScoreFrontHigh);
+        //      }
 
-             arm.updateIntake(IntakeState.cubeOpen);
-             autoIntakeCounter++;
+        //      arm.updateIntake(IntakeState.cubeOpen);
+        //      autoIntakeCounter++;
 
-             if (autoIntakeCounter > 25) {
+        //      if (autoIntakeCounter > 25) {
 
-                 autoArmCounter = 0;
+        //          autoArmCounter = 0;
 
-                 autoStep = 6;
-                 Odometry.MAX_POWER = 0.45;
+        //          autoStep = 6;
+        //          Odometry.MAX_POWER = 0.45;
 
-                 switch (autoSelected) {
-                     case (defaultAuto):
-                         odometry.straight(0);
-                         break;
-                     case (rightAuto):
-                         odometry.straight(15);
-                         break;
-                     case (leftAuto):
-                         odometry.straight(159);
-                         break;
-                     case (middleAuto):
-                         odometry.straight(10);
-                         break;
-                     case (middleChargeAuto):
-                         odometry.straight(97.0);
-                         break;
-                 }
+        //          switch (autoSelected) {
+        //              case (defaultAuto):
+        //                  odometry.straight(0);
+        //                  break;
+        //              case (rightAuto):
+        //                  odometry.straight(15);
+        //                  break;
+        //              case (leftAuto):
+        //                  odometry.straight(159);
+        //                  break;
+        //              case (middleAuto):
+        //                  odometry.straight(10);
+        //                  break;
+        //              case (middleChargeAuto):
+        //                  odometry.straight(97.0);
+        //                  break;
+        //          }
 
-             }
+        //      }
 
-         } else if (autoStep == 6) {
+        //  } else if (autoStep == 6) {
 
-             powers = odometry.update();
+        //      powers = odometry.update();
 
-             m_driveLeft1.setNeutralMode(NeutralMode.Brake);
-             m_driveLeft2.setNeutralMode(NeutralMode.Brake);
-             m_driveRight1.setNeutralMode(NeutralMode.Brake);
-             m_driveRight2.setNeutralMode(NeutralMode.Brake);
+        //      m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+        //      m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+        //      m_driveRight1.setNeutralMode(NeutralMode.Brake);
+        //      m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
-             autoArmCounter++;
-             if (autoArmCounter > 25) arm.updateArm(0, 9, 90);
+        //      autoArmCounter++;
+        //      if (autoArmCounter > 25) arm.updateArm(0, 9, 90);
 
-             mg_rightDrive.set(powers[0]);
-             mg_leftDrive.set(powers[1]);
+        //      mg_rightDrive.set(powers[0]);
+        //      mg_leftDrive.set(powers[1]);
 
 
-             if (odometry.moveFinished()) {
+        //      if (odometry.moveFinished()) {
 
-                 autoStep = 7;
-                 autoIntakeCounter = 0;
+        //          autoStep = 7;
+        //          autoIntakeCounter = 0;
 
-                 lock = true;
+        //          lock = true;
 
-             }
+        //      }
 
-         } else {
+        //  } else {
 
-             arm.updateArm(0, 9, 90);
+        //      arm.updateArm(0, 9, 90);
 
-             if (autoSelected == middleChargeAuto) {
+        //      if (autoSelected == middleChargeAuto) {
 
-                 powers = odometry.balance(imu.getAngle(), imu.getRate());
+        //          powers = odometry.balance(imu.getAngle(), imu.getRate());
 
-             } else {
+        //      } else {
 
-                 powers = odometry.update();
+        //          powers = odometry.update();
 
-             }
+        //      }
 
-             m_driveLeft1.setNeutralMode(NeutralMode.Brake);
-             m_driveLeft2.setNeutralMode(NeutralMode.Brake);
-             m_driveRight1.setNeutralMode(NeutralMode.Brake);
-             m_driveRight2.setNeutralMode(NeutralMode.Brake);
+        //      m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+        //      m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+        //      m_driveRight1.setNeutralMode(NeutralMode.Brake);
+        //      m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
-             mg_rightDrive.set(powers[0]);
-             mg_leftDrive.set(powers[1]);
+        //      mg_rightDrive.set(powers[0]);
+        //      mg_leftDrive.set(powers[1]);
 
-         }
+        //  }
 
-         /* Just for extra protection */
-         if (autoTimeoutTimer.get() > 14.5) {
+        //  /* Just for extra protection */
+        //  if (autoTimeoutTimer.get() > 14.5) {
 
-             Arm.joint1Brake.set(Value.kReverse);
-             Arm.joint2Brake.set(Value.kReverse);
+        //      Arm.joint1Brake.set(Value.kReverse);
+        //      Arm.joint2Brake.set(Value.kReverse);
 
-             // arm.setJoint1(0);
-             // arm.setJoint2(0);
-             // arm.setJoint3(0);
+        //      // arm.setJoint1(0);
+        //      // arm.setJoint2(0);
+        //      // arm.setJoint3(0);
 
-             // m_driveLeft1.setNeutralMode(NeutralMode.Brake);
-             // m_driveLeft2.setNeutralMode(NeutralMode.Brake);
-             // m_driveRight1.setNeutralMode(NeutralMode.Brake);
-             // m_driveRight2.setNeutralMode(NeutralMode.Brake);
+        //      // m_driveLeft1.setNeutralMode(NeutralMode.Brake);
+        //      // m_driveLeft2.setNeutralMode(NeutralMode.Brake);
+        //      // m_driveRight1.setNeutralMode(NeutralMode.Brake);
+        //      // m_driveRight2.setNeutralMode(NeutralMode.Brake);
 
-             // mg_rightDrive.set(0);
-             // mg_leftDrive.set(0);
+        //      // mg_rightDrive.set(0);
+        //      // mg_leftDrive.set(0);
 
-             // autoTimeoutTimer.stop();
-         }
+        //      // autoTimeoutTimer.stop();
+        //  }
+
+        r_robotDrive.feedWatchdog();
+
+       if (testStep == 0) {
+
+           odometry.turn(-180);
+           testStep = 1;
+
+       } else if (testStep == 1) {
+
+           mg_rightDrive.set(odometry.update()[0]);
+           mg_leftDrive.set(odometry.update()[1]);
+
+           if (odometry.moveFinished()) {
+
+               testStep = 2;
+
+           }
+
+       } else {
+
+           mg_leftDrive.set(0);
+           mg_rightDrive.set(0);
+
+       }
 
     }
 
@@ -1026,30 +1055,30 @@ public class Robot extends TimedRobot {
 
 
         /** Code for turning */
-//        r_robotDrive.feedWatchdog();
-//
-//        if (testStep == 0) {
-//
-//            odometry.turn(-180);
-//            testStep = 1;
-//
-//        } else if (testStep == 1) {
-//
-//            mg_rightDrive.set(odometry.update()[0]);
-//            mg_leftDrive.set(odometry.update()[1]);
-//
-//            if (odometry.moveFinished()) {
-//
-//                testStep = 2;
-//
-//            }
-//
-//        } else {
-//
-//            mg_leftDrive.set(0);
-//            mg_rightDrive.set(0);
-//
-//        }
+    //    r_robotDrive.feedWatchdog();
+
+    //    if (testStep == 0) {
+
+    //        odometry.turn(-180);
+    //        testStep = 1;
+
+    //    } else if (testStep == 1) {
+
+    //        mg_rightDrive.set(odometry.update()[0]);
+    //        mg_leftDrive.set(odometry.update()[1]);
+
+    //        if (odometry.moveFinished()) {
+
+    //            testStep = 2;
+
+    //        }
+
+    //    } else {
+
+    //        mg_leftDrive.set(0);
+    //        mg_rightDrive.set(0);
+
+    //    }
         
         // if (bbRight.getRawButton(1))
         //     leftDriveEnc.setQuadraturePosition(0, 0);

@@ -21,11 +21,11 @@ public class Odometry {
 
     /* PID Constants */
     private static double P_general_fwrd = 0.015;
-    private static double P_general_turn = 0.021;
+    private static double P_general_turn = 0.019;
     private static double P_differential = 0.00000000000001;
 
     static PIDController genPID = new PIDController(P_general_fwrd, 0, 0);
-    private static PIDController diffPID = new PIDController(P_differential, 0, 0);
+    static PIDController diffPID = new PIDController(P_differential, 0, 0);
 
     /* Speed Constants */
     public static double MAX_POWER = 0.5;
@@ -51,11 +51,11 @@ public class Odometry {
 
     public boolean destinationReached;
     private int destinationReachedPersistenceCounter;
-    private int destinationReachedPersistenceCounterLimit = 15;
+    private int destinationReachedPersistenceCounterLimit = 25;
 
     private boolean isStraight = true;
 
-    double trackWidth = 27.25;
+    double trackWidth = 28.0;
     double fullRotation = trackWidth * Math.PI; // the amount the wheels travel in a full rotation
     double countsPerRobotRev = fullRotation * (4096 / wheelCircumference);
     double countsPerDegree = countsPerRobotRev / 360;
@@ -89,15 +89,7 @@ public class Odometry {
             else this.leftTravelled = toInches(Odometry.leftEncoder.getQuadraturePosition());
 
             this.distanceTravelled = (this.rightTravelled + this.leftTravelled) / 2.0;
-            if (isStraight) {
-
-                this.differentialError = this.rightTravelled - this.leftTravelled;
-
-            } else {
-
-                this.differentialError = 0;
-
-            }
+            this.differentialError = this.rightTravelled - this.leftTravelled;
 
             if (isStraight) {
 
@@ -110,8 +102,18 @@ public class Odometry {
             }
             this.diffPower = clipPowerStraight(Odometry.diffPID.calculate(differentialError));
 
-            this.rightPower = this.genPower - this.diffPower / 2.0;
-            this.leftPower = this.genPower + this.diffPower / 2.0;
+            if (isStraight) {            
+            
+                this.rightPower = this.genPower - this.diffPower / 2.0;
+                this.leftPower = this.genPower + this.diffPower / 2.0;
+            
+            } else {
+
+                this.rightPower = this.genPower;
+                this.leftPower = this.genPower;
+
+            }
+
             /* Turn left */
             // if (this.diffPower > 0) {
             //     this.leftPower = this.genPower - clip(this.diffPower, this.genPower);
