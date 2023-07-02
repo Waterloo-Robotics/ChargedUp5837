@@ -584,14 +584,14 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goConePickupFrontShelf;
 
             /* Scoring Positions */
-            if (farmSim2.getRawButtonPressed(13))
+            if (farmSim1.getRawButtonPressed(13))
                 armState = ArmState.goConeScoreBackLow;
             if (farmSim1.getRawButtonPressed(7))
                 armState = ArmState.goConeScoreBackMiddle;
             if (farmSim1.getRawButtonPressed(2))
                 armState = ArmState.goConeScoreBackHigh;
 
-            if (farmSim2.getRawButtonPressed(11))
+            if (farmSim1.getRawButtonPressed(11))
                 armState = ArmState.goConeScoreFrontLow;
             if (farmSim1.getRawButtonPressed(6))
                 armState = ArmState.goConeScoreFrontMiddle;
@@ -616,14 +616,14 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goCubePickupFrontShelf;
 
             /* Scoring Positions */
-            if (farmSim2.getRawButtonPressed(12))
+            if (farmSim1.getRawButtonPressed(12))
                 armState = ArmState.goCubeScoreBackLow;
             if (farmSim1.getRawButtonPressed(7))
                 armState = ArmState.goCubeScoreBackMiddle;
             if (farmSim1.getRawButtonPressed(2))
                 armState = ArmState.goCubeScoreBackHigh;
 
-            if (farmSim2.getRawButtonPressed(11))
+            if (farmSim1.getRawButtonPressed(11))
                 armState = ArmState.goCubeScoreFrontLow;
             if (farmSim1.getRawButtonPressed(6))
                 armState = ArmState.goCubeScoreFrontMiddle;
