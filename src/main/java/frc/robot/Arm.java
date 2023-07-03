@@ -99,9 +99,9 @@ public class Arm {
 
     public enum IntakeState {
 
-        coneIntakeForward, coneIntakeBack,
-        cubeOpen, cubeClosed,
-        coneClosed
+        coneIntake, coneOuttake,
+        cubeIntake,
+        cubeOuttake
 
     }
 
@@ -564,28 +564,24 @@ public class Arm {
 
         switch (intakeState) {
 
-            case cubeOpen:
+            case cubeIntake:
             intake.set(Value.kReverse);
             coneSwitch.set(Value.kForward);
             break;
 
-            case coneIntakeForward:
+            case cubeOuttake:
+                intake.set(Value.kReverse);
+                coneSwitch.set(Value.kForward);
+                break;
+
+            case coneIntake:
             intake.set(Value.kForward);
             coneSwitch.set(Value.kForward);
             break;
 
-            case coneIntakeBack:
+            case coneOuttake:
             intake.set(Value.kForward);
             coneSwitch.set(Value.kReverse);
-            break;
-
-            case cubeClosed:
-            intake.set(Value.kForward);
-            break;
-            
-            case coneClosed:
-            intake.set(Value.kReverse);
-            coneSwitch.set(Value.kForward);
             break;
 
         }

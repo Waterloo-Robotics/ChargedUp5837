@@ -79,7 +79,7 @@ public class Robot extends TimedRobot {
     boolean timeoutOverride = false;
 
     public Arm.ArmState armState = Arm.ArmState.home;
-    public Arm.IntakeState intakeState = IntakeState.cubeOpen;
+    public Arm.IntakeState intakeState = IntakeState.cubeIntake;
     ADIS16470_IMU imu = new ADIS16470_IMU();
 
     boolean coneControl, front = true;
@@ -284,8 +284,6 @@ public class Robot extends TimedRobot {
 
         lock = false;
 
-        arm.updateIntake(IntakeState.cubeClosed);
-
         m_driveLeft1.configOpenloopRamp(0.75);
         m_driveLeft2.configOpenloopRamp(0.75);
         m_driveRight1.configOpenloopRamp(0.75);
@@ -386,7 +384,7 @@ public class Robot extends TimedRobot {
                 arm.updateArm(cubeScoreBackHigh);
             }
 
-            arm.updateIntake(IntakeState.cubeOpen);
+            arm.updateIntake(IntakeState.cubeIntake);
             autoIntakeCounter++;
 
             if (autoIntakeCounter > 25) {
@@ -567,10 +565,10 @@ public class Robot extends TimedRobot {
             // IntakeState.coneIntakeForward;
             // if (c_controller.getAButtonPressed()) intakeState = IntakeState.coneClosed;
 
-            if (c_controller.getXButtonPressed() || c_controller.getBButtonPressed())
-                intakeState = IntakeState.cubeOpen;
+            if (c_controller.getBButtonPressed())
+                intakeState = IntakeState.cubeIntake;
             if (c_controller.getAButtonPressed())
-                intakeState = IntakeState.cubeClosed;
+                intakeState = IntakeState.coneIntake;
 
             /* Pickup Positions */
             if (farmSim2.getRawButtonPressed(2))
@@ -599,10 +597,10 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goConeScoreFrontHigh;
         } else {
             /* Claw Control */
-            if (c_controller.getXButtonPressed() || c_controller.getBButtonPressed())
-                intakeState = IntakeState.cubeOpen;
+            if (c_controller.getBButtonPressed())
+                intakeState = IntakeState.cubeIntake;
             if (c_controller.getAButtonPressed())
-                intakeState = IntakeState.cubeClosed;
+                intakeState = IntakeState.coneIntake;
 
             /* Pickup Positions */
             if (farmSim2.getRawButtonPressed(2))
