@@ -21,6 +21,7 @@ public class Arm {
     static CANSparkMax m_Joint1_1 = new CANSparkMax(10, CANSparkMaxLowLevel.MotorType.kBrushless);
     static CANSparkMax m_Joint1_2 = new CANSparkMax(11, CANSparkMaxLowLevel.MotorType.kBrushless);
     static CANSparkMax m_Joint2 = new CANSparkMax(12, CANSparkMaxLowLevel.MotorType.kBrushless);
+    static CANSparkMax m_Intake = new CANSparkMax(13, MotorType.kBrushless);
     static MotorControllerGroup mg_Joint1 = new MotorControllerGroup(m_Joint1_1, m_Joint1_2);
 
     static CANSparkMax m_Joint3 = new CANSparkMax(13, MotorType.kBrushless);
@@ -38,6 +39,8 @@ public class Arm {
     public static DoubleSolenoid intake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 4, 5);
     public static DoubleSolenoid coneSwitch = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 6, 7);
 
+    double intakeCurrentThreshold = 1000;
+
     public enum ArmState {
         /* Cone Pickups */
         goConePickupFrontGround, conePickupFrontGround,
@@ -46,11 +49,13 @@ public class Arm {
         goConePickupBackShelf , conePickupBackShelf,
         goConePickupOnSideFront, conePickupOnSideFront,
         goConePickupOnSideBack, conePickupOnSideBack,
+
         /* Cube Pickups */
         goCubePickupFrontGround , cubePickupFrontGround,
         goCubePickupBackGround , cubePickupBackGround,
         goCubePickupFrontShelf , cubePickupFrontShelf,
         goCubePickupBackShelf , cubePickupBackShelf,
+
         /* Cone Score */
         goConeScoreFrontLow, coneScoreFrontLow,
         goConeScoreFrontMiddle, coneScoreFrontMiddle,
@@ -58,6 +63,7 @@ public class Arm {
         goConeScoreBackLow, coneScoreBackLow,
         goConeScoreBackMiddle, coneScoreBackMiddle,
         goConeScoreBackHigh, coneScoreBackHigh,
+
         /* Cube Score */
         goCubeScoreFrontLow, cubeScoreFrontLow,
         goCubeScoreFrontMiddle, cubeScoreFrontMiddle,
@@ -65,10 +71,13 @@ public class Arm {
         goCubeScoreBackLow, cubeScoreBackLow,
         goCubeScoreBackMiddle, cubeScoreBackMiddle,
         goCubeScoreBackHigh, cubeScoreBackHigh,
+
         /* Homes */
         goFrontHome, frontHome, 
         goBackHome, backHome, 
         goHome, home, 
+
+        /* Manual mode */
         manual
 
     }
@@ -580,6 +589,28 @@ public class Arm {
             break;
 
         }
+
+    }
+
+    public void setIntake(double power) {
+
+        double finalPower = power;
+
+        if (m_Intake.getOutputCurrent() > intakeCurrentThreshold && Math.abs(power) > 0.05) {
+
+            finalPower = 0.05;
+
+        } else if (Math.abs(power) > 0.35) {
+
+            finalPower = Math.signum(power) * 0.35;
+
+        } else {
+
+            finalPower = power;
+
+        }
+
+        m_Intake.set(finalPower);
 
     }
 
