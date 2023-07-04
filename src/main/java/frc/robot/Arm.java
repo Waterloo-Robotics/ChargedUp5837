@@ -39,7 +39,7 @@ public class Arm {
     public static DoubleSolenoid intake = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 4, 5);
     public static DoubleSolenoid coneSwitch = new DoubleSolenoid(1, PneumaticsModuleType.CTREPCM, 6, 7);
 
-    double intakeCurrentThreshold = 1000;
+    double intakeCurrentThreshold = 25;
 
     public enum ArmState {
         /* Cone Pickups */
@@ -100,8 +100,8 @@ public class Arm {
     public enum IntakeState {
 
         coneIntake, coneOuttake,
-        cubeIntake,
-        cubeOuttake
+        cubeIntake, cubeOuttake,
+        hold
 
     }
 
@@ -565,23 +565,25 @@ public class Arm {
         switch (intakeState) {
 
             case cubeIntake:
-            intake.set(Value.kReverse);
-            coneSwitch.set(Value.kForward);
+                intake.set(Value.kReverse);
+                coneSwitch.set(Value.kForward);
             break;
 
             case cubeOuttake:
                 intake.set(Value.kReverse);
                 coneSwitch.set(Value.kForward);
-                break;
+            break;
 
             case coneIntake:
-            intake.set(Value.kForward);
-            coneSwitch.set(Value.kForward);
+                this.setIntake(-0.35);
             break;
 
             case coneOuttake:
-            intake.set(Value.kForward);
-            coneSwitch.set(Value.kReverse);
+                this.setIntake(0.35);
+            break;
+
+            case hold:
+                this.setIntake(0);
             break;
 
         }

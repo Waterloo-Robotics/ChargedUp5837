@@ -79,10 +79,12 @@ public class Robot extends TimedRobot {
     boolean timeoutOverride = false;
 
     public Arm.ArmState armState = Arm.ArmState.home;
-    public Arm.IntakeState intakeState = IntakeState.cubeIntake;
+    public double intakePower = 0;
+    public boolean isConeInIntake = true;
+    public boolean isIntakeFull = true;
     ADIS16470_IMU imu = new ADIS16470_IMU();
 
-    boolean coneControl, front = true;
+    boolean coneControl = true;
 
     ArmPosition home = new ArmPosition(0, 9, 90);
     ArmPosition homeBack = new ArmPosition(16, 9, 90);
@@ -565,11 +567,6 @@ public class Robot extends TimedRobot {
             // IntakeState.coneIntakeForward;
             // if (c_controller.getAButtonPressed()) intakeState = IntakeState.coneClosed;
 
-            if (c_controller.getBButtonPressed())
-                intakeState = IntakeState.cubeIntake;
-            if (c_controller.getAButtonPressed())
-                intakeState = IntakeState.coneIntake;
-
             /* Pickup Positions */
             if (farmSim2.getRawButtonPressed(2))
                 armState = ArmState.goConePickupBackGround;
@@ -597,10 +594,6 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goConeScoreFrontHigh;
         } else {
             /* Claw Control */
-            if (c_controller.getBButtonPressed())
-                intakeState = IntakeState.cubeIntake;
-            if (c_controller.getAButtonPressed())
-                intakeState = IntakeState.coneIntake;
 
             /* Pickup Positions */
             if (farmSim2.getRawButtonPressed(2))
@@ -629,8 +622,33 @@ public class Robot extends TimedRobot {
                 armState = ArmState.goCubeScoreFrontHigh;
         }
 
-        /* Set Claw state */
-        arm.updateIntake(intakeState);
+        /* Update intake motor(s) */
+
+        if (deadZone(c_controller.getRightTriggerAxis()) > 0) {
+
+            isConeInIntake = true;
+
+        } else if (deadZone(c_controller.getLeftTriggerAxis()) > 0) {
+
+            isConeInIntake = false;
+
+        }
+
+        if (!c_controller.getLeftBumper() && !c_controller.getRightBumper()) {
+
+            intakePower = (0.35 * c_controller.getRightTriggerAxis()) - (0.35 * c_controller.getLeftTriggerAxis());
+
+        } else if (c_controller.getLeftBumper()) {
+
+            intakePower = 0.35;
+
+        } else if (c_controller.getRightBumper()) {
+
+            intakePower = -0.35;
+
+        }
+
+        arm.setIntake(intakePower);
 
         if (farmSim2.getRawButtonPressed(12))
             lock = !lock;
